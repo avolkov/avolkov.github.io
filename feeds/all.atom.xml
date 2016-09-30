@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/all.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2016-09-29T22:01:00-04:00</updated><entry><title>Hello world</title><link href="https://avolkov.github.io/hello.html" rel="alternate"></link><published>2016-09-29T22:01:00-04:00</published><updated>2016-09-29T22:01:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-09-29:hello.html</id><summary type="html">&lt;p&gt;A one way of learning restructured test is to start writing all of the things
+down using rst. &lt;a class="reference external" href="http://docs.getpelican.com/en/3.3.0/getting_started.html"&gt;Pelican&lt;/a&gt;
+is a rather nice static site generator.&lt;/p&gt;
+&lt;p&gt;A short tutorial on how to set up a blog with pelican, rst and github pages can be found
+on &lt;a class="reference external" href="http://www.circuidipity.com/pelican.html"&gt;Circuidipity&lt;/a&gt;.&lt;/p&gt;
+</summary><category term="pelican"></category><category term="web"></category><category term="rst"></category><category term="github"></category><category term="first"></category></entry></feed>
