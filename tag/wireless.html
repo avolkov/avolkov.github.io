@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
         <meta charset="utf-8" />
-        <title>Raspberry Pi Wireless config</title>
+        <title>disparate notes - wireless</title>
         <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
         <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
 
@@ -15,18 +15,13 @@
         <header id="banner" class="body">
                 <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
                 <nav><ul>
-                    <li class="active"><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
+                    <li><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
-<section id="content" class="body">
-  <article>
-    <header>
-      <h1 class="entry-title">
-        <a href="https://avolkov.github.io/raspberry-pi-wireless-config.html" rel="bookmark"
-           title="Permalink to Raspberry Pi Wireless config">Raspberry Pi Wireless config</a></h1>
-    </header>
 
-    <div class="entry-content">
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/raspberry-pi-wireless-config.html">Raspberry Pi Wireless config</a></h1>
 <footer class="post-info">
         <abbr class="published" title="2015-12-06T00:57:30-05:00">
                 Published: Sun 06 December 2015
@@ -37,7 +32,7 @@
         </address>
 <p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
 <p>tags: <a href="https://avolkov.github.io/tag/raspberrypi.html">raspberrypi</a> <a href="https://avolkov.github.io/tag/networking.html">networking</a> <a href="https://avolkov.github.io/tag/wireless.html">wireless</a> <a href="https://avolkov.github.io/tag/realtek.html">realtek</a> <a href="https://avolkov.github.io/tag/ralink.html">ralink</a> <a href="https://avolkov.github.io/tag/usb.html">usb</a> </p>
-</footer><!-- /.post-info -->      <p>Here's working wireless configuration I use to connect my Raspberry Pis with USB wifi dongles to my home network.</p>
+</footer><!-- /.post-info --><p>Here's working wireless configuration I use to connect my Raspberry Pis with USB wifi dongles to my home network.</p>
 <p>I've been using Realtek RTL8188CUS and Ralink RT5370 based devices rated for 150Mbps.</p>
 <p>Dongles based on Ralink chip have been working flawlessly, but I have experienced two issues with the Realtek-based device. The adapter just doesn't work in AP mode, and if there's no network activity it will drop in power saving mode that can only be resumed packets are sent from the host.</p>
 <p>In practical terms the host becomes unavailable for anyone who attempts to initiate a remote connection, however, this can be mitigated by creating a cron job that pings the router every minute.</p>
@@ -61,11 +56,8 @@ iface default inet dhcp
         <span class="nv">auth_alg</span><span class="o">=</span>OPEN
 <span class="o">}</span>
 </pre></div>
-
-    </div><!-- /.entry-content -->
-
-  </article>
-</section>
+                </article>
+            </aside><!-- /#featured -->
         <section id="extras" class="body">
                 <div class="blogroll">
                         <h2>blogroll</h2>

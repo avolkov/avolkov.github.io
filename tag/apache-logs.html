@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>disparate notes - apache logs</title>
+        <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
+        <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
+                <nav><ul>
+                    <li><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/fun-of-premature-optimization.html">Fun of premature optimization</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2016-01-09T00:00:00-05:00">
+                Published: Sat 09 January 2016
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/apache-logs.html">apache logs</a> <a href="https://avolkov.github.io/tag/regular-expressions.html">regular expressions</a> <a href="https://avolkov.github.io/tag/performance.html">performance</a> </p>
+</footer><!-- /.post-info --><p>Last week I deployed a redesigned website that included a new search feature, looking at the server logs I've noticed that users of the site use search. A lot.</p>
+<p>I wanted to know more about what kind of questions end-users were asking, so I wrote a short program to parse the logs, extracting query strings formed with HTTP GET variable <cite>q=query+text</cite>. It was fairly easy do, especially with apache_log_parser <a class="reference external" href="https://pypi.python.org/pypi/apache-log-parser/">pypi</a>, <a class="reference external" href="https://github.com/rory/apache-log-parser">github</a>, that works with any web server with <a class="reference external" href="https://httpd.apache.org/docs/1.3/logs.html#common">common log format</a> support. Nginx is compatible, default access log line can be parsed with this -- <em>%h %l %u %t &quot;%r&quot; %&gt;s %O &quot;%{Referer}i&quot; &quot;%{User-Agent}i'</em></p>
+<p>The program returns an array records, each containing query string, remote IP address and a time stamp, then I toyed with the idea of measuring its performance, so I tested several possibilities with the most crude tool ever -- <a class="reference external" href="http://ss64.com/bash/time.html">time command</a>. I used <em>real</em> time value.</p>
+<p>The setup: this program is implemented in Python 3, it was run on Intel Celeron 2955U, the input log file size is 15MB. All the code changes were cumulative -- the performance was measured with all the changes up to that point.</p>
+<p>Source code from the initial version.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
+<span class="kn">import</span> <span class="nn">apache_log_parser</span>
+<span class="n">nginx_parser</span> <span class="o">=</span> <span class="n">apache_log_parser</span><span class="o">.</span><span class="n">make_parser</span><span class="p">(</span>
+    <span class="s1">&#39;%h %l </span><span class="si">%u</span><span class="s1"> %t &quot;</span><span class="si">%r</span><span class="s1">&quot; %&gt;s %O &quot;%{Referer}i&quot; </span><span class="se">\&quot;</span><span class="s1">%{User-Agent}i&#39;</span><span class="p">)</span>
+<span class="n">log_file</span> <span class="o">=</span> <span class="s2">&quot;access.log&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">parse_queries</span><span class="p">(</span><span class="n">in_query</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return one or more quieries in the request stripping &#39;q&#39; member&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">in_query</span><span class="p">:</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;q&#39;</span> <span class="ow">in</span> <span class="n">q</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">q</span> <span class="o">-</span> <span class="p">{</span><span class="s1">&#39;q&#39;</span><span class="p">}</span>
+            <span class="k">yield</span> <span class="n">out</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">prep_item</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">parsed_line</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;create a dictinary with label, timestamp and IP address members&quot;&quot;&quot;</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">parsed_line</span><span class="p">[</span><span class="s1">&#39;time_received_tz_datetimeobj&#39;</span><span class="p">]</span>
+    <span class="n">remote_ip</span> <span class="o">=</span> <span class="n">parsed_line</span><span class="p">[</span><span class="s1">&#39;remote_host&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">ip</span><span class="o">=</span><span class="n">remote_ip</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">extract_searches</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;parse the logfile and return list of dictionaries with query, time ip&quot;&quot;&quot;</span>
+    <span class="n">search_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
+            <span class="n">outp</span> <span class="o">=</span> <span class="n">nginx_parser</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;request_url_path&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outp</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="s1">&#39;/search/&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outp</span><span class="p">[</span><span class="s1">&#39;request_url_path&#39;</span><span class="p">]:</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">parse_queries</span><span class="p">(</span><span class="n">outp</span><span class="p">[</span><span class="s1">&#39;request_url_query_list&#39;</span><span class="p">]):</span>
+                <span class="n">search_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prep_item</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">outp</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">search_list</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">searches</span> <span class="o">=</span> <span class="n">extract_searches</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span>
+    <span class="n">pprint</span><span class="p">(</span><span class="n">searches</span><span class="p">)</span>
+</pre></div>
+<p>Running this script under time gave the following results.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Run #</th>
+<th class="head">time (seconds)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>1</td>
+<td>11.052</td>
+</tr>
+<tr><td>2</td>
+<td>11.139</td>
+</tr>
+<tr><td>3</td>
+<td>11.019</td>
+</tr>
+<tr><td>4</td>
+<td>11.073</td>
+</tr>
+<tr><td>average</td>
+<td>11.0708</td>
+</tr>
+</tbody>
+</table>
+<p>What would happen if the list accumulator in <cite>extract_searches</cite> were replaced by a generator called outside of the function by list comprehension?
+The code will look much cleaner, generators are a little slower than in-memory operations, but list comprehensions are much faster than array append, on average this should be the same or slightly faster.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">extract_searches</span><span class="p">(</span><span class="n">log_fd</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">log_fd</span><span class="p">:</span>
+        <span class="n">outp</span> <span class="o">=</span> <span class="n">nginx_parser</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="s1">&#39;request_url_path&#39;</span> <span class="ow">in</span> <span class="n">outp</span><span class="p">)</span> <span class="ow">or</span> \
+                <span class="p">(</span><span class="s1">&#39;/search/&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outp</span><span class="p">[</span><span class="s1">&#39;request_url_path&#39;</span><span class="p">]):</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">parse_queries</span><span class="p">(</span><span class="n">outp</span><span class="p">[</span><span class="s1">&#39;request_url_query_list&#39;</span><span class="p">]):</span>
+            <span class="k">yield</span> <span class="n">prep_item</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">outp</span><span class="p">)</span>
+
+<span class="o">...</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">logfile</span><span class="p">:</span>
+        <span class="n">searches</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">extract_searches</span><span class="p">(</span><span class="n">logfile</span><span class="p">)]</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">searches</span><span class="p">)</span>
+</pre></div>
+<p>As it turns out, on average this particular case of nicer python code is marginally slower.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Run #</th>
+<th class="head">time (seconds)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>1</td>
+<td>10.991</td>
+</tr>
+<tr><td>2</td>
+<td>11.219</td>
+</tr>
+<tr><td>3</td>
+<td>11.431</td>
+</tr>
+<tr><td>4</td>
+<td>11.141</td>
+</tr>
+<tr><td>average</td>
+<td>11.1955</td>
+</tr>
+</tbody>
+</table>
+<p>Another possible optimization was to replace <cite>if 'q' in q:</cite> statement with try .. catch block as at that point in the code, this statement should mostly evaluate to <cite>True</cite>. After running the program without the conditional it turn out my guess was wrong and the statement always evaluated to <cite>True</cite>.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">parse_queries</span><span class="p">(</span><span class="n">in_query</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">in_query</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">-=</span> <span class="p">{</span><span class="s1">&#39;q&#39;</span><span class="p">}</span>
+        <span class="k">yield</span> <span class="n">out</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</pre></div>
+<p>After this modification, the average runtime improved enough to make up for performance hit from the pythonic changes.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Run #</th>
+<th class="head">time (seconds)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>1</td>
+<td>10.950</td>
+</tr>
+<tr><td>2</td>
+<td>11.119</td>
+</tr>
+<tr><td>3</td>
+<td>11.090</td>
+</tr>
+<tr><td>4</td>
+<td>11.028</td>
+</tr>
+<tr><td>average</td>
+<td>11.0468</td>
+</tr>
+</tbody>
+</table>
+<p>Finally, I'm only interested in urls containing '/search/', what if the whole log line is searched for '/search'/ without attempting to find request URL string first?</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">extract_searches</span><span class="p">(</span><span class="n">log_fd</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">log_fd</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;/search/&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">outp</span> <span class="o">=</span> <span class="n">nginx_parser</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;request_url_path&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outp</span><span class="p">)</span> <span class="ow">or</span> \
+                <span class="p">(</span><span class="s1">&#39;/search/&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outp</span><span class="p">[</span><span class="s1">&#39;request_url_path&#39;</span><span class="p">]):</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">parse_queries</span><span class="p">(</span><span class="n">outp</span><span class="p">[</span><span class="s1">&#39;request_url_query_list&#39;</span><span class="p">]):</span>
+            <span class="k">yield</span> <span class="n">prep_item</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">outp</span><span class="p">)</span>
+</pre></div>
+<p>The improvement was an order of magnitude. Turns out the common log format parser, is just a nicely abstracted set of regular expressions, a rather neat neat set -- <a class="reference external" href="https://github.com/rory/apache-log-parser/blob/master/apache_log_parser/__init__.py#L141">__init__.py line 141</a>, but running several regular expression to parse a line is way slower than a simple string comparison.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Run #</th>
+<th class="head">time (seconds)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>1</td>
+<td>1.025</td>
+</tr>
+<tr><td>2</td>
+<td>1.022</td>
+</tr>
+<tr><td>3</td>
+<td>1.026</td>
+</tr>
+<tr><td>4</td>
+<td>1.040</td>
+</tr>
+<tr><td>average</td>
+<td>1.0285</td>
+</tr>
+</tbody>
+</table>
+<p>I can think of two things after doing this exercise: first, <a class="reference external" href="http://www.joelonsoftware.com/articles/LeakyAbstractions.html">the law of leaky abstractions</a> is still with us even if the abstracted code is relatively straightforward and works well, there are still implementation details to be aware of; second, fixing up and making code better and more pythonic helps me to think about program flow differently with much greater potential benefits in the long run, even if in the short run performance of a program may decrease.</p>
+                </article>
+            </aside><!-- /#featured -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>blogroll</h2>
+                        <ul>
+                            <li><a href="http://getpelican.com/">Pelican</a></li>
+                            <li><a href="http://python.org/">Python.org</a></li>
+                            <li><a href="http://jinja.pocoo.org/">Jinja2</a></li>
+                            <li><a href="#">You can modify those links in your config file</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                            <li><a href="#">You can add links in your config file</a></li>
+                            <li><a href="#">Another social link</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
