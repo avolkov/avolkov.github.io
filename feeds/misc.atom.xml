@@ -62,7 +62,7 @@
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;/div&gt;
-</summary><category term="debian automation preseeding"></category></entry><entry><title>Hello world</title><link href="https://avolkov.github.io/hello.html" rel="alternate"></link><published>2016-09-29T22:01:00-04:00</published><updated>2016-09-29T22:01:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-09-29:hello.html</id><summary type="html">&lt;p&gt;A one way of learning restructured test is to start writing all of the things
+</summary><category term="debian"></category><category term="automation"></category><category term="preseeding"></category></entry><entry><title>Hello world</title><link href="https://avolkov.github.io/hello.html" rel="alternate"></link><published>2016-09-29T22:01:00-04:00</published><updated>2016-09-29T22:01:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-09-29:hello.html</id><summary type="html">&lt;p&gt;A one way of learning restructured test is to start writing all of the things
 down using rst. &lt;a class="reference external" href="http://docs.getpelican.com/en/3.3.0/getting_started.html"&gt;Pelican&lt;/a&gt;
 is a rather nice static site generator.&lt;/p&gt;
 &lt;p&gt;A short tutorial on how to set up a blog with pelican, rst and github pages can be found
