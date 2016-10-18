@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>Debian Automated Install</title>
+        <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
+        <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
+                <nav><ul>
+                    <li class="active"><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="https://avolkov.github.io/debian-automated-install.html" rel="bookmark"
+           title="Permalink to Debian Automated Install">Debian Automated Install</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2016-10-17T21:44:00-04:00">
+                Published: Mon 17 October 2016
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/debian-automation-preseeding.html">debian automation preseeding</a> </p>
+</footer><!-- /.post-info -->      <p>A few days ago in my part of the talk at GTALUG <a class="footnote-reference" href="#id7" id="id1">[1]</a>  I mentioned using Debian automated install <a class="footnote-reference" href="#id8" id="id2">[2]</a> to quickly bring up fully virtualized systems, as one of possible methods of system deployment or testing Ansible scripts.</p>
+<p>This idea worked so well that I made a youtube video out of it --</p>
+<div class="youtube youtube-16x9"><iframe src="https://www.youtube.com/embed/WtIkKrkzPSw" allowfullscreen seamless frameBorder="0"></iframe></div><p>The video is based on the following: preseed file <a class="footnote-reference" href="#id9" id="id3">[3]</a> taken from kali linux preseed <a class="footnote-reference" href="#id10" id="id4">[4]</a> and gen_iso script <a class="footnote-reference" href="#id11" id="id5">[5]</a>, the latter is a distilled version EditIso instructions from Debian Wiki <a class="footnote-reference" href="#id12" id="id6">[6]</a></p>
+<p>Example usage -- generating an ISO image based on an existing Debian ISO and a preseed.cfg:</p>
+<div class="highlight"><pre><span></span>./gen_iso.sh -i debian-8.6.0-amd64-CD-1.iso -p presseed.cfg preseeded.iso
+</pre></div>
+<div class="section" id="discussion">
+<h2>Discussion</h2>
+<p>One major issue with writing automated install answers -- partitioning abilities are somewhat limited, and the scripts quickly grows in complexity for anything beyond simple one- or two- partition layout. If complex partition required, as in cases when installing Debian on bare hardware, it is possible omit answers to partition questions -- the installer will drop into interactive mode, where custom partition will be set up, once that part of the installation is finished, automated install will resume.</p>
+</div>
+<div class="section" id="creating-preseed-file">
+<h2>Creating preseed file</h2>
+<p>It is possible to just run a standard installation giving all the answers to the installer, once installation is over, the answers are retrieved using <em>debconf-get-selections</em> tool, a part of <em>debconf-utils</em> package.</p>
+<div class="highlight"><pre><span></span><span class="c1"># debconf-get-selections --installer &gt; ${HOME}/preseed.cfg</span>
+<span class="c1"># debconf-get-selections &gt;&gt; ${HOME}/preseed.cfg</span>
+</pre></div>
+<p>The first command important than the second as it generates answers to questions asked during installation, the second command generates all answers to any subsequent package configuration dialog (i.e. complex packages like Postfix, or Postgresql).</p>
+<p>One possible issue that might arise in this scenario of generating configuration files -- automated install answers are work only for <em>standard</em> Debian installation, answers recorded in <em>expert</em> mode will cause errors like installation looping infinitely on one of the dialogs, or automated install dropping into regular install mode.</p>
+<p>Another way of generating a preseed file, is to modify existing  minimal configuration.</p>
+</div>
+<div class="section" id="conclusion">
+<h2>Conclusion</h2>
+<p>Debian automated install is a handy way of getting from bare metal to a running system that can be handed off to Ansible for further configuration. The point of automated install is to fill the niche Ansible currently not servicing, all further system modifications should be done with Ansible as automated install answers quickly become really complicated.</p>
+</div>
+<div class="section" id="sources">
+<h2>Sources</h2>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>AGM and Ansible with Myles Braithwaite and Alex Volkov. <a class="reference external" href="https://gtalug.org/meeting/2016-10/">https://gtalug.org/meeting/2016-10/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td>Appendix B. Automating the installation using preseeding. <a class="reference external" href="https://www.debian.org/releases/jessie/i386/apbs02.html.en">https://www.debian.org/releases/jessie/i386/apbs02.html.en</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[3]</td><td>A sample preseed file. <a class="reference external" href="https://github.com/myles/2016-10-11-ansible/blob/master/2-testing/03-debian-preseed/iso/preseed.cfg">https://github.com/myles/2016-10-11-ansible/blob/master/2-testing/03-debian-preseed/iso/preseed.cfg</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id10" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[4]</td><td>Kali linux preseed file. <a class="reference external" href="https://www.kali.org/dojo/preseed.cfg">https://www.kali.org/dojo/preseed.cfg</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[5]</td><td>gen_iso.sh script for creating ISO images with slipstreamed preseed files.  <a class="reference external" href="https://github.com/myles/2016-10-11-ansible/blob/master/2-testing/03-debian-preseed/iso/gen_iso.sh">https://github.com/myles/2016-10-11-ansible/blob/master/2-testing/03-debian-preseed/iso/gen_iso.sh</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id12" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[6]</td><td>Debian-Installer: How to modify an existing CD image to preseed d-i. <a class="reference external" href="https://wiki.debian.org/DebianInstaller/Preseed/EditIso">https://wiki.debian.org/DebianInstaller/Preseed/EditIso</a></td></tr>
+</tbody>
+</table>
+</div>
+
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
