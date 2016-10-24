@@ -21,7 +21,151 @@
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="https://avolkov.github.io/debian-automated-install.html">Debian Automated Install</a></h1>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html">Linting and declaration lookup for Python with Sublime Text 3</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2016-10-19T21:08:00-04:00">
+                Published: Wed 19 October 2016
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/sublime.html">sublime</a> <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/anaconda.html">anaconda</a> <a href="https://avolkov.github.io/tag/programming.html">programming</a> <a href="https://avolkov.github.io/tag/debian.html">debian</a> </p>
+</footer><!-- /.post-info --><p>Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:</p>
+<ul class="simple">
+<li>linting -- letting the computer keep track of consistent coding style</li>
+<li>definition lookup -- letting the computer to look up location of definitions</li>
+</ul>
+<p>Linting is provided by SublimeLinter <a class="footnote-reference" href="#id7" id="id1">[1]</a> and function definition lookup by Anaconda Python IDE <a class="footnote-reference" href="#id8" id="id2">[2]</a>. This article assumes Package Control <a class="footnote-reference" href="#id9" id="id3">[3]</a>  is already been installed.</p>
+<div class="section" id="prerequisites">
+<h2>Prerequisites</h2>
+<p>Install flake8 code analyzer <a class="footnote-reference" href="#id10" id="id4">[4]</a> on the system for both Python 2 and 3, it's required by SublimeLinter.</p>
+<div class="highlight"><pre><span></span>apt-get install python-flake8 python3-flake8
+</pre></div>
+</div>
+<div class="section" id="sublime-package-installation">
+<h2>Sublime Package Installation</h2>
+<p>Install the following Sublime packages: <em>SublimeLinter</em>, <em>SublimeLinter-flake8</em> and <em>Anaconda</em>.</p>
+<p>For each package repeat the following process -- Invoke package control by bringing command pallet with <strong>Ctrl+Shift+p</strong> start typing <em>install</em>, then select <em>Package Control: Install Package</em> type package name and hit enter.</p>
+</div>
+<div class="section" id="project-preferences">
+<h2>Project Preferences</h2>
+<p>These are per-project settings, go to <em>Project -&gt; Edit Project</em> and paste the following config. If <em>Edit Project</em> item is unavailable, save the project with <em>Project -&gt; Save Project As...</em></p>
+<div class="section" id="top-level-settings-sections">
+<h3>Top-level settings sections</h3>
+<p><strong>SublimeLinter</strong> -- all the settings related to SublimeLinter</p>
+<p><strong>build_systems</strong> -- Default Anaconda build system, configuration parameters to run external program to process project files <a class="footnote-reference" href="#id11" id="id5">[5]</a></p>
+<p><strong>folders</strong> -- Sublime declaration on folders included in the project.</p>
+<p><strong>settings</strong> -- Anaconda interpreter / project settings</p>
+</div>
+<div class="section" id="other-parameters">
+<h3>Other parameters</h3>
+<p>The configuration parameter <em>&#64;python</em> specifies syntax version to lint, in this case Python 2.7.</p>
+<p>In all paths, replace {user} and {project} with actual user and project names. I follow a convention of using project name as the name of the virtual environment for that project.</p>
+<p><strong>extra_paths</strong> -- parameter specifies one or more path to a virtual environment in order to make declaration lookup work for third-party libraries. <a class="footnote-reference" href="#id12" id="id6">[6]</a></p>
+<div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;SublimeLinter&quot;</span><span class="p">:</span>
+    <span class="p">{</span>
+        <span class="nt">&quot;@python&quot;</span><span class="p">:</span> <span class="mf">2.7</span><span class="p">,</span>
+        <span class="nt">&quot;linters&quot;</span><span class="p">:</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;flake8&quot;</span><span class="p">:</span>
+            <span class="p">{</span>
+                <span class="nt">&quot;max-line-length&quot;</span><span class="p">:</span> <span class="mi">120</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;build_systems&quot;</span><span class="p">:</span>
+    <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;file_regex&quot;</span><span class="p">:</span> <span class="s2">&quot;^[ ]*File \&quot;(...*?)\&quot;, line ([0-9]*)&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Anaconda Python Builder&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;selector&quot;</span><span class="p">:</span> <span class="s2">&quot;source.python&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;shell_cmd&quot;</span><span class="p">:</span> <span class="s2">&quot;\&quot;/home/{user}/.virtualenvs/{project}/bin/python\&quot; -u \&quot;$file\&quot;&quot;</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="nt">&quot;folders&quot;</span><span class="p">:</span>
+    <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;/home/{user}/repos/{project}&quot;</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="nt">&quot;settings&quot;</span><span class="p">:</span>
+    <span class="p">{</span>
+        <span class="nt">&quot;python_interpreter&quot;</span><span class="p">:</span> <span class="s2">&quot;/home/{user}/.virtualenvs/{project}/bin/python&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;extra_paths&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;/home/{user}/.virtualenvs/{project}/&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="key-shortcut-for-anaconda-goto-definition-lookup">
+<h2>Key Shortcut for Anaconda 'Goto definition..' lookup</h2>
+<p>Anaconda <strong>Goto definition..</strong> action is different from from Sublime Text 3 Built-in <strong>Go To Definition..</strong>, the latter works just fine for project source files, but it doesn't allow for settings in external paths.</p>
+<p>The former can be triggered either by right-clicking on a term, then selecting <strong>Anaconda -&gt; Goto Definition</strong>, or using default key binding <strong>Ctrl + Alt + g</strong>; I find both of the shortcuts inconvenient to use.</p>
+<p>The configuration below assigns this action to <strong>F8</strong> key (which doesn't seem to be used by anything).</p>
+<p>Paste the following code in <strong>Preferences -&gt; Package Settings -&gt; Anaconda -&gt; Key Bindings - User</strong></p>
+<div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="nt">&quot;command&quot;</span><span class="p">:</span> <span class="s2">&quot;anaconda_goto&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;keys&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;f8&quot;</span><span class="p">],</span>
+        <span class="nt">&quot;context&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;selector&quot;</span><span class="p">,</span> <span class="nt">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;equal&quot;</span><span class="p">,</span> <span class="nt">&quot;operand&quot;</span><span class="p">:</span> <span class="s2">&quot;source.python&quot;</span><span class="p">}]</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+<p>Now set cursor on a term with definition to lookup and press <strong>F8</strong>.</p>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>SublimeLinter 3 -- <a class="reference external" href="http://www.sublimelinter.com/en/latest/">http://www.sublimelinter.com/en/latest/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td>Anaconda Python IDE -- <a class="reference external" href="http://damnwidget.github.io/anaconda/">http://damnwidget.github.io/anaconda/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[3]</td><td>Package Control, the Sublime Text package manager -- <a class="reference external" href="https://packagecontrol.io/">https://packagecontrol.io/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id10" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[4]</td><td>Flake 8 the modular source checker, pep8, pyflakes and co -- <a class="reference external" href="https://pypi.python.org/pypi/flake8">https://pypi.python.org/pypi/flake8</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[5]</td><td>Sublime Text Unofficial Documentation / Build Systems (Batch Processing) -- <a class="reference external" href="http://docs.sublimetext.info/en/latest/file_processing/build_systems.html">http://docs.sublimetext.info/en/latest/file_processing/build_systems.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id12" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[6]</td><td>Configure Anaconda the Right Way -- <a class="reference external" href="http://damnwidget.github.io/anaconda/anaconda_settings/">http://damnwidget.github.io/anaconda/anaconda_settings/</a></td></tr>
+</tbody>
+</table>
+</div>
+                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="https://avolkov.github.io/debian-automated-install.html" rel="bookmark"
+                           title="Permalink to Debian Automated Install">Debian Automated Install</a></h1>
+                </header>
+
+                <div class="entry-content">
 <footer class="post-info">
         <abbr class="published" title="2016-10-17T21:44:00-04:00">
                 Published: Mon 17 October 2016
@@ -32,71 +176,13 @@
         </address>
 <p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
 <p>tags: <a href="https://avolkov.github.io/tag/debian.html">debian</a> <a href="https://avolkov.github.io/tag/automation.html">automation</a> <a href="https://avolkov.github.io/tag/preseeding.html">preseeding</a> </p>
-</footer><!-- /.post-info --><p>A few days ago in my part of the talk at GTALUG <a class="footnote-reference" href="#id7" id="id1">[1]</a>  I mentioned using Debian automated install <a class="footnote-reference" href="#id8" id="id2">[2]</a> to quickly bring up fully virtualized systems, as one of possible methods of system deployment or testing Ansible scripts.</p>
-<p>This idea worked so well that I made a youtube video out of it --</p>
-<div class="youtube youtube-16x9"><iframe src="https://www.youtube.com/embed/WtIkKrkzPSw" allowfullscreen seamless frameBorder="0"></iframe></div><p>The video is based on the following: preseed file <a class="footnote-reference" href="#id9" id="id3">[3]</a> taken from kali linux preseed <a class="footnote-reference" href="#id10" id="id4">[4]</a> and gen_iso script <a class="footnote-reference" href="#id11" id="id5">[5]</a>, the latter is a distilled version EditIso instructions from Debian Wiki <a class="footnote-reference" href="#id12" id="id6">[6]</a></p>
-<p>Example usage -- generating an ISO image based on an existing Debian ISO and a preseed.cfg:</p>
-<div class="highlight"><pre><span></span>./gen_iso.sh -i debian-8.6.0-amd64-CD-1.iso -p presseed.cfg preseeded.iso
-</pre></div>
-<div class="section" id="discussion">
-<h2>Discussion</h2>
-<p>One major issue with writing automated install answers -- partitioning abilities are somewhat limited, and the scripts quickly grows in complexity for anything beyond simple one- or two- partition layout. If complex partition required, as in cases when installing Debian on bare hardware, it is possible omit answers to partition questions -- the installer will drop into interactive mode, where custom partition will be set up, once that part of the installation is finished, automated install will resume.</p>
-</div>
-<div class="section" id="creating-preseed-file">
-<h2>Creating preseed file</h2>
-<p>It is possible to just run a standard installation giving all the answers to the installer, once installation is over, the answers are retrieved using <em>debconf-get-selections</em> tool, a part of <em>debconf-utils</em> package.</p>
-<div class="highlight"><pre><span></span><span class="c1"># debconf-get-selections --installer &gt; ${HOME}/preseed.cfg</span>
-<span class="c1"># debconf-get-selections &gt;&gt; ${HOME}/preseed.cfg</span>
-</pre></div>
-<p>The first command important than the second as it generates answers to questions asked during installation, the second command generates all answers to any subsequent package configuration dialog (i.e. complex packages like Postfix, or Postgresql).</p>
-<p>One possible issue that might arise in this scenario of generating configuration files -- automated install answers are work only for <em>standard</em> Debian installation, answers recorded in <em>expert</em> mode will cause errors like installation looping infinitely on one of the dialogs, or automated install dropping into regular install mode.</p>
-<p>Another way of generating a preseed file, is to modify existing  minimal configuration.</p>
-</div>
-<div class="section" id="conclusion">
-<h2>Conclusion</h2>
-<p>Debian automated install is a handy way of getting from bare metal to a running system that can be handed off to Ansible for further configuration. The point of automated install is to fill the niche Ansible currently not servicing, all further system modifications should be done with Ansible as automated install answers quickly become really complicated.</p>
-</div>
-<div class="section" id="sources">
-<h2>Sources</h2>
-<table class="docutils footnote" frame="void" id="id7" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[1]</td><td>AGM and Ansible with Myles Braithwaite and Alex Volkov. <a class="reference external" href="https://gtalug.org/meeting/2016-10/">https://gtalug.org/meeting/2016-10/</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id8" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[2]</td><td>Appendix B. Automating the installation using preseeding. <a class="reference external" href="https://www.debian.org/releases/jessie/i386/apbs02.html.en">https://www.debian.org/releases/jessie/i386/apbs02.html.en</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id9" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[3]</td><td>A sample preseed file. <a class="reference external" href="https://github.com/myles/2016-10-11-ansible/blob/master/2-testing/03-debian-preseed/iso/preseed.cfg">https://github.com/myles/2016-10-11-ansible/blob/master/2-testing/03-debian-preseed/iso/preseed.cfg</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id10" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[4]</td><td>Kali linux preseed file. <a class="reference external" href="https://www.kali.org/dojo/preseed.cfg">https://www.kali.org/dojo/preseed.cfg</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id11" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[5]</td><td>gen_iso.sh script for creating ISO images with slipstreamed preseed files.  <a class="reference external" href="https://github.com/myles/2016-10-11-ansible/blob/master/2-testing/03-debian-preseed/iso/gen_iso.sh">https://github.com/myles/2016-10-11-ansible/blob/master/2-testing/03-debian-preseed/iso/gen_iso.sh</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id12" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[6]</td><td>Debian-Installer: How to modify an existing CD image to preseed d-i. <a class="reference external" href="https://wiki.debian.org/DebianInstaller/Preseed/EditIso">https://wiki.debian.org/DebianInstaller/Preseed/EditIso</a></td></tr>
-</tbody>
-</table>
-</div>
-                </article>
-            </aside><!-- /#featured -->
+</footer><!-- /.post-info -->                <p>A few days ago in my part of the talk at GTALUG <a class="footnote-reference" href="#id7" id="id1">[1]</a>  I mentioned using Debian automated install <a class="footnote-reference" href="#id8" id="id2">[2]</a> to quickly bring up fully virtualized systems, as one of possible methods of system deployment or testing Ansible scripts.</p>
+<p>This idea worked so well that I made a youtube video ...</p>
+                <a class="readmore" href="https://avolkov.github.io/debian-automated-install.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+                </section><!-- /#content -->
         <section id="extras" class="body">
                 <div class="social">
                         <h2>social</h2>

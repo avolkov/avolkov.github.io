@@ -21,7 +21,151 @@
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="https://avolkov.github.io/fun-of-premature-optimization.html">Fun of premature optimization</a></h1>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html">Linting and declaration lookup for Python with Sublime Text 3</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2016-10-19T21:08:00-04:00">
+                Published: Wed 19 October 2016
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/sublime.html">sublime</a> <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/anaconda.html">anaconda</a> <a href="https://avolkov.github.io/tag/programming.html">programming</a> <a href="https://avolkov.github.io/tag/debian.html">debian</a> </p>
+</footer><!-- /.post-info --><p>Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:</p>
+<ul class="simple">
+<li>linting -- letting the computer keep track of consistent coding style</li>
+<li>definition lookup -- letting the computer to look up location of definitions</li>
+</ul>
+<p>Linting is provided by SublimeLinter <a class="footnote-reference" href="#id7" id="id1">[1]</a> and function definition lookup by Anaconda Python IDE <a class="footnote-reference" href="#id8" id="id2">[2]</a>. This article assumes Package Control <a class="footnote-reference" href="#id9" id="id3">[3]</a>  is already been installed.</p>
+<div class="section" id="prerequisites">
+<h2>Prerequisites</h2>
+<p>Install flake8 code analyzer <a class="footnote-reference" href="#id10" id="id4">[4]</a> on the system for both Python 2 and 3, it's required by SublimeLinter.</p>
+<div class="highlight"><pre><span></span>apt-get install python-flake8 python3-flake8
+</pre></div>
+</div>
+<div class="section" id="sublime-package-installation">
+<h2>Sublime Package Installation</h2>
+<p>Install the following Sublime packages: <em>SublimeLinter</em>, <em>SublimeLinter-flake8</em> and <em>Anaconda</em>.</p>
+<p>For each package repeat the following process -- Invoke package control by bringing command pallet with <strong>Ctrl+Shift+p</strong> start typing <em>install</em>, then select <em>Package Control: Install Package</em> type package name and hit enter.</p>
+</div>
+<div class="section" id="project-preferences">
+<h2>Project Preferences</h2>
+<p>These are per-project settings, go to <em>Project -&gt; Edit Project</em> and paste the following config. If <em>Edit Project</em> item is unavailable, save the project with <em>Project -&gt; Save Project As...</em></p>
+<div class="section" id="top-level-settings-sections">
+<h3>Top-level settings sections</h3>
+<p><strong>SublimeLinter</strong> -- all the settings related to SublimeLinter</p>
+<p><strong>build_systems</strong> -- Default Anaconda build system, configuration parameters to run external program to process project files <a class="footnote-reference" href="#id11" id="id5">[5]</a></p>
+<p><strong>folders</strong> -- Sublime declaration on folders included in the project.</p>
+<p><strong>settings</strong> -- Anaconda interpreter / project settings</p>
+</div>
+<div class="section" id="other-parameters">
+<h3>Other parameters</h3>
+<p>The configuration parameter <em>&#64;python</em> specifies syntax version to lint, in this case Python 2.7.</p>
+<p>In all paths, replace {user} and {project} with actual user and project names. I follow a convention of using project name as the name of the virtual environment for that project.</p>
+<p><strong>extra_paths</strong> -- parameter specifies one or more path to a virtual environment in order to make declaration lookup work for third-party libraries. <a class="footnote-reference" href="#id12" id="id6">[6]</a></p>
+<div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;SublimeLinter&quot;</span><span class="p">:</span>
+    <span class="p">{</span>
+        <span class="nt">&quot;@python&quot;</span><span class="p">:</span> <span class="mf">2.7</span><span class="p">,</span>
+        <span class="nt">&quot;linters&quot;</span><span class="p">:</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;flake8&quot;</span><span class="p">:</span>
+            <span class="p">{</span>
+                <span class="nt">&quot;max-line-length&quot;</span><span class="p">:</span> <span class="mi">120</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;build_systems&quot;</span><span class="p">:</span>
+    <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;file_regex&quot;</span><span class="p">:</span> <span class="s2">&quot;^[ ]*File \&quot;(...*?)\&quot;, line ([0-9]*)&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Anaconda Python Builder&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;selector&quot;</span><span class="p">:</span> <span class="s2">&quot;source.python&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;shell_cmd&quot;</span><span class="p">:</span> <span class="s2">&quot;\&quot;/home/{user}/.virtualenvs/{project}/bin/python\&quot; -u \&quot;$file\&quot;&quot;</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="nt">&quot;folders&quot;</span><span class="p">:</span>
+    <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;/home/{user}/repos/{project}&quot;</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="nt">&quot;settings&quot;</span><span class="p">:</span>
+    <span class="p">{</span>
+        <span class="nt">&quot;python_interpreter&quot;</span><span class="p">:</span> <span class="s2">&quot;/home/{user}/.virtualenvs/{project}/bin/python&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;extra_paths&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;/home/{user}/.virtualenvs/{project}/&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="key-shortcut-for-anaconda-goto-definition-lookup">
+<h2>Key Shortcut for Anaconda 'Goto definition..' lookup</h2>
+<p>Anaconda <strong>Goto definition..</strong> action is different from from Sublime Text 3 Built-in <strong>Go To Definition..</strong>, the latter works just fine for project source files, but it doesn't allow for settings in external paths.</p>
+<p>The former can be triggered either by right-clicking on a term, then selecting <strong>Anaconda -&gt; Goto Definition</strong>, or using default key binding <strong>Ctrl + Alt + g</strong>; I find both of the shortcuts inconvenient to use.</p>
+<p>The configuration below assigns this action to <strong>F8</strong> key (which doesn't seem to be used by anything).</p>
+<p>Paste the following code in <strong>Preferences -&gt; Package Settings -&gt; Anaconda -&gt; Key Bindings - User</strong></p>
+<div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="nt">&quot;command&quot;</span><span class="p">:</span> <span class="s2">&quot;anaconda_goto&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;keys&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;f8&quot;</span><span class="p">],</span>
+        <span class="nt">&quot;context&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;selector&quot;</span><span class="p">,</span> <span class="nt">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;equal&quot;</span><span class="p">,</span> <span class="nt">&quot;operand&quot;</span><span class="p">:</span> <span class="s2">&quot;source.python&quot;</span><span class="p">}]</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+<p>Now set cursor on a term with definition to lookup and press <strong>F8</strong>.</p>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>SublimeLinter 3 -- <a class="reference external" href="http://www.sublimelinter.com/en/latest/">http://www.sublimelinter.com/en/latest/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td>Anaconda Python IDE -- <a class="reference external" href="http://damnwidget.github.io/anaconda/">http://damnwidget.github.io/anaconda/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[3]</td><td>Package Control, the Sublime Text package manager -- <a class="reference external" href="https://packagecontrol.io/">https://packagecontrol.io/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id10" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[4]</td><td>Flake 8 the modular source checker, pep8, pyflakes and co -- <a class="reference external" href="https://pypi.python.org/pypi/flake8">https://pypi.python.org/pypi/flake8</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[5]</td><td>Sublime Text Unofficial Documentation / Build Systems (Batch Processing) -- <a class="reference external" href="http://docs.sublimetext.info/en/latest/file_processing/build_systems.html">http://docs.sublimetext.info/en/latest/file_processing/build_systems.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id12" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[6]</td><td>Configure Anaconda the Right Way -- <a class="reference external" href="http://damnwidget.github.io/anaconda/anaconda_settings/">http://damnwidget.github.io/anaconda/anaconda_settings/</a></td></tr>
+</tbody>
+</table>
+</div>
+                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="https://avolkov.github.io/fun-of-premature-optimization.html" rel="bookmark"
+                           title="Permalink to Fun of premature optimization">Fun of premature optimization</a></h1>
+                </header>
+
+                <div class="entry-content">
 <footer class="post-info">
         <abbr class="published" title="2016-01-09T00:00:00-05:00">
                 Published: Sat 09 January 2016
@@ -32,208 +176,13 @@
         </address>
 <p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
 <p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/apache-logs.html">apache logs</a> <a href="https://avolkov.github.io/tag/regular-expressions.html">regular expressions</a> <a href="https://avolkov.github.io/tag/performance.html">performance</a> </p>
-</footer><!-- /.post-info --><p>Last week I deployed a redesigned website that included a new search feature, looking at the server logs I've noticed that users of the site use search. A lot.</p>
-<p>I wanted to know more about what kind of questions end-users were asking, so I wrote a short program to parse the logs, extracting query strings formed with HTTP GET variable <cite>q=query+text</cite>. It was fairly easy do, especially with apache_log_parser <a class="reference external" href="https://pypi.python.org/pypi/apache-log-parser/">pypi</a>, <a class="reference external" href="https://github.com/rory/apache-log-parser">github</a>, that works with any web server with <a class="reference external" href="https://httpd.apache.org/docs/1.3/logs.html#common">common log format</a> support. Nginx is compatible, default access log line can be parsed with this -- <em>%h %l %u %t &quot;%r&quot; %&gt;s %O &quot;%{Referer}i&quot; &quot;%{User-Agent}i'</em></p>
-<p>The program returns an array records, each containing query string, remote IP address and a time stamp, then I toyed with the idea of measuring its performance, so I tested several possibilities with the most crude tool ever -- <a class="reference external" href="http://ss64.com/bash/time.html">time command</a>. I used <em>real</em> time value.</p>
-<p>The setup: this program is implemented in Python 3, it was run on Intel Celeron 2955U, the input log file size is 15MB. All the code changes were cumulative -- the performance was measured with all the changes up to that point.</p>
-<p>Source code from the initial version.</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
-<span class="kn">import</span> <span class="nn">apache_log_parser</span>
-<span class="n">nginx_parser</span> <span class="o">=</span> <span class="n">apache_log_parser</span><span class="o">.</span><span class="n">make_parser</span><span class="p">(</span>
-    <span class="s1">&#39;%h %l </span><span class="si">%u</span><span class="s1"> %t &quot;</span><span class="si">%r</span><span class="s1">&quot; %&gt;s %O &quot;%{Referer}i&quot; </span><span class="se">\&quot;</span><span class="s1">%{User-Agent}i&#39;</span><span class="p">)</span>
-<span class="n">log_file</span> <span class="o">=</span> <span class="s2">&quot;access.log&quot;</span>
-
-
-<span class="k">def</span> <span class="nf">parse_queries</span><span class="p">(</span><span class="n">in_query</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return one or more quieries in the request stripping &#39;q&#39; member&quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">in_query</span><span class="p">:</span>
-        <span class="n">q</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s1">&#39;q&#39;</span> <span class="ow">in</span> <span class="n">q</span><span class="p">:</span>
-            <span class="n">out</span> <span class="o">=</span> <span class="n">q</span> <span class="o">-</span> <span class="p">{</span><span class="s1">&#39;q&#39;</span><span class="p">}</span>
-            <span class="k">yield</span> <span class="n">out</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-
-
-<span class="k">def</span> <span class="nf">prep_item</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">parsed_line</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;create a dictinary with label, timestamp and IP address members&quot;&quot;&quot;</span>
-    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">parsed_line</span><span class="p">[</span><span class="s1">&#39;time_received_tz_datetimeobj&#39;</span><span class="p">]</span>
-    <span class="n">remote_ip</span> <span class="o">=</span> <span class="n">parsed_line</span><span class="p">[</span><span class="s1">&#39;remote_host&#39;</span><span class="p">]</span>
-    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">ip</span><span class="o">=</span><span class="n">remote_ip</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">extract_searches</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;parse the logfile and return list of dictionaries with query, time ip&quot;&quot;&quot;</span>
-    <span class="n">search_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
-            <span class="n">outp</span> <span class="o">=</span> <span class="n">nginx_parser</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s1">&#39;request_url_path&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outp</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="k">if</span> <span class="s1">&#39;/search/&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outp</span><span class="p">[</span><span class="s1">&#39;request_url_path&#39;</span><span class="p">]:</span>
-                <span class="k">continue</span>
-            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">parse_queries</span><span class="p">(</span><span class="n">outp</span><span class="p">[</span><span class="s1">&#39;request_url_query_list&#39;</span><span class="p">]):</span>
-                <span class="n">search_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prep_item</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">outp</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">search_list</span>
-
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">searches</span> <span class="o">=</span> <span class="n">extract_searches</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span>
-    <span class="n">pprint</span><span class="p">(</span><span class="n">searches</span><span class="p">)</span>
-</pre></div>
-<p>Running this script under time gave the following results.</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="33%" />
-<col width="67%" />
-</colgroup>
-<thead valign="bottom">
-<tr><th class="head">Run #</th>
-<th class="head">time (seconds)</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr><td>1</td>
-<td>11.052</td>
-</tr>
-<tr><td>2</td>
-<td>11.139</td>
-</tr>
-<tr><td>3</td>
-<td>11.019</td>
-</tr>
-<tr><td>4</td>
-<td>11.073</td>
-</tr>
-<tr><td>average</td>
-<td>11.0708</td>
-</tr>
-</tbody>
-</table>
-<p>What would happen if the list accumulator in <cite>extract_searches</cite> were replaced by a generator called outside of the function by list comprehension?
-The code will look much cleaner, generators are a little slower than in-memory operations, but list comprehensions are much faster than array append, on average this should be the same or slightly faster.</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">extract_searches</span><span class="p">(</span><span class="n">log_fd</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">log_fd</span><span class="p">:</span>
-        <span class="n">outp</span> <span class="o">=</span> <span class="n">nginx_parser</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="s1">&#39;request_url_path&#39;</span> <span class="ow">in</span> <span class="n">outp</span><span class="p">)</span> <span class="ow">or</span> \
-                <span class="p">(</span><span class="s1">&#39;/search/&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outp</span><span class="p">[</span><span class="s1">&#39;request_url_path&#39;</span><span class="p">]):</span>
-            <span class="k">continue</span>
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">parse_queries</span><span class="p">(</span><span class="n">outp</span><span class="p">[</span><span class="s1">&#39;request_url_query_list&#39;</span><span class="p">]):</span>
-            <span class="k">yield</span> <span class="n">prep_item</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">outp</span><span class="p">)</span>
-
-<span class="o">...</span>
-
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">logfile</span><span class="p">:</span>
-        <span class="n">searches</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">extract_searches</span><span class="p">(</span><span class="n">logfile</span><span class="p">)]</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">searches</span><span class="p">)</span>
-</pre></div>
-<p>As it turns out, on average this particular case of nicer python code is marginally slower.</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="33%" />
-<col width="67%" />
-</colgroup>
-<thead valign="bottom">
-<tr><th class="head">Run #</th>
-<th class="head">time (seconds)</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr><td>1</td>
-<td>10.991</td>
-</tr>
-<tr><td>2</td>
-<td>11.219</td>
-</tr>
-<tr><td>3</td>
-<td>11.431</td>
-</tr>
-<tr><td>4</td>
-<td>11.141</td>
-</tr>
-<tr><td>average</td>
-<td>11.1955</td>
-</tr>
-</tbody>
-</table>
-<p>Another possible optimization was to replace <cite>if 'q' in q:</cite> statement with try .. catch block as at that point in the code, this statement should mostly evaluate to <cite>True</cite>. After running the program without the conditional it turn out my guess was wrong and the statement always evaluated to <cite>True</cite>.</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">parse_queries</span><span class="p">(</span><span class="n">in_query</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">in_query</span><span class="p">:</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
-        <span class="n">out</span> <span class="o">-=</span> <span class="p">{</span><span class="s1">&#39;q&#39;</span><span class="p">}</span>
-        <span class="k">yield</span> <span class="n">out</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-</pre></div>
-<p>After this modification, the average runtime improved enough to make up for performance hit from the pythonic changes.</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="33%" />
-<col width="67%" />
-</colgroup>
-<thead valign="bottom">
-<tr><th class="head">Run #</th>
-<th class="head">time (seconds)</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr><td>1</td>
-<td>10.950</td>
-</tr>
-<tr><td>2</td>
-<td>11.119</td>
-</tr>
-<tr><td>3</td>
-<td>11.090</td>
-</tr>
-<tr><td>4</td>
-<td>11.028</td>
-</tr>
-<tr><td>average</td>
-<td>11.0468</td>
-</tr>
-</tbody>
-</table>
-<p>Finally, I'm only interested in urls containing '/search/', what if the whole log line is searched for '/search'/ without attempting to find request URL string first?</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">extract_searches</span><span class="p">(</span><span class="n">log_fd</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">log_fd</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s1">&#39;/search/&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="n">outp</span> <span class="o">=</span> <span class="n">nginx_parser</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;request_url_path&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outp</span><span class="p">)</span> <span class="ow">or</span> \
-                <span class="p">(</span><span class="s1">&#39;/search/&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outp</span><span class="p">[</span><span class="s1">&#39;request_url_path&#39;</span><span class="p">]):</span>
-            <span class="k">continue</span>
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">parse_queries</span><span class="p">(</span><span class="n">outp</span><span class="p">[</span><span class="s1">&#39;request_url_query_list&#39;</span><span class="p">]):</span>
-            <span class="k">yield</span> <span class="n">prep_item</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">outp</span><span class="p">)</span>
-</pre></div>
-<p>The improvement was an order of magnitude. Turns out the common log format parser, is just a nicely abstracted set of regular expressions, a rather neat neat set -- <a class="reference external" href="https://github.com/rory/apache-log-parser/blob/master/apache_log_parser/__init__.py#L141">__init__.py line 141</a>, but running several regular expression to parse a line is way slower than a simple string comparison.</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="33%" />
-<col width="67%" />
-</colgroup>
-<thead valign="bottom">
-<tr><th class="head">Run #</th>
-<th class="head">time (seconds)</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr><td>1</td>
-<td>1.025</td>
-</tr>
-<tr><td>2</td>
-<td>1.022</td>
-</tr>
-<tr><td>3</td>
-<td>1.026</td>
-</tr>
-<tr><td>4</td>
-<td>1.040</td>
-</tr>
-<tr><td>average</td>
-<td>1.0285</td>
-</tr>
-</tbody>
-</table>
-<p>I can think of two things after doing this exercise: first, <a class="reference external" href="http://www.joelonsoftware.com/articles/LeakyAbstractions.html">the law of leaky abstractions</a> is still with us even if the abstracted code is relatively straightforward and works well, there are still implementation details to be aware of; second, fixing up and making code better and more pythonic helps me to think about program flow differently with much greater potential benefits in the long run, even if in the short run performance of a program may decrease.</p>
-                </article>
-            </aside><!-- /#featured -->
+</footer><!-- /.post-info -->                <p>Last week I deployed a redesigned website that included a new search feature, looking at the server logs I've noticed that users of the site use search. A lot.</p>
+<p>I wanted to know more about what kind of questions end-users were asking, so I wrote a short program to ...</p>
+                <a class="readmore" href="https://avolkov.github.io/fun-of-premature-optimization.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+                </section><!-- /#content -->
         <section id="extras" class="body">
                 <div class="social">
                         <h2>social</h2>
