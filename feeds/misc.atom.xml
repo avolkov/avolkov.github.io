@@ -1,5 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/misc.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2016-10-23T22:18:00-04:00</updated><entry><title>Linting and declaration lookup for Python with Sublime Text 3</title><link href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html" rel="alternate"></link><published>2016-10-23T22:18:00-04:00</published><updated>2016-10-23T22:18:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-23:linting-and-declaration-lookup-for-python-with-sublime-text-3.html</id><summary type="html">&lt;p&gt;Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/misc.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2016-10-28T10:19:00-04:00</updated><entry><title>Running Jenkins in Docker</title><link href="https://avolkov.github.io/running-jenkins-in-docker.html" rel="alternate"></link><published>2016-10-28T10:19:00-04:00</published><updated>2016-10-28T10:19:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-28:running-jenkins-in-docker.html</id><summary type="html">&lt;div class="section" id="requirements"&gt;
+&lt;h2&gt;Requirements&lt;/h2&gt;
+&lt;p&gt;I went to an FSOSS 2016 &lt;a class="footnote-reference" href="#id7" id="id1"&gt;[1]&lt;/a&gt; conference and I found one talk on Jenkins to be particularly interesting.&lt;/p&gt;
+&lt;p&gt;I wanted to try Jenkins, without configuring Java on my laptop or setting up a VM. Using Jenkins docker container would be the easiest solution for this kind of problem.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="prerequisites"&gt;
+&lt;h2&gt;Prerequisites&lt;/h2&gt;
+&lt;p&gt;This article assumes Docker &lt;a class="footnote-reference" href="#id8" id="id2"&gt;[2]&lt;/a&gt; and Docker Compose &lt;a class="footnote-reference" href="#id9" id="id3"&gt;[3]&lt;/a&gt; have been set up.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="jenkins-container"&gt;
+&lt;h2&gt;Jenkins container&lt;/h2&gt;
+&lt;p&gt;I used an official container built by Jenkins community &lt;a class="footnote-reference" href="#id10" id="id4"&gt;[4]&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The container comes with these settings:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Jenkins server runs on ports 5000 and 8000&lt;/li&gt;
+&lt;li&gt;Jenkins settings saved to &lt;strong&gt;/var/jenkins_home&lt;/strong&gt; and the directory is exposed as a docker volume&lt;/li&gt;
+&lt;li&gt;user / group ids are set to jenkins / jenkins with uid/gid set to 1001/1001.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="section" id="volume-setup"&gt;
+&lt;h2&gt;Volume Setup&lt;/h2&gt;
+&lt;p&gt;Docker volume settings, specify container directory mapping between host and container &lt;a class="footnote-reference" href="#id11" id="id5"&gt;[5]&lt;/a&gt;, allowing files generated  inside of the container to persist. The host system will store the data in &lt;strong&gt;/srv/dockercontainer/jenkins_home&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Following steps to set up docker volume and permission mapping on the host.&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;Create docker volume path on the host&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# mkdir /srv/dockercontainer/jenkins_home
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="2"&gt;
+&lt;li&gt;Set up user/group mapping on the host.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# groupadd -gid 20000 jenkins
+# useradd --home-dir /srv/dockercontainer/jenkins_home \
+   --uid 20000 --gid 20000 -s /bin/false -M jenkins
+# chown -R jenkins:jenkins /srv/dockercontainer/jenkins_home
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="docker-compose-file"&gt;
+&lt;h2&gt;Docker compose file&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;docker-compose.yml&lt;/strong&gt; specifies startup settings for Jenkins container.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;version&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;2&amp;#39;&lt;/span&gt;
+&lt;span class="l l-Scalar l-Scalar-Plain"&gt;services&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
+  &lt;span class="l l-Scalar l-Scalar-Plain"&gt;jenkins&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
+    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;image&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;jenkins&lt;/span&gt;
+    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;user&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;20000:20000&amp;quot;&lt;/span&gt;
+    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;ports&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
+      &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;5000:5000&amp;quot;&lt;/span&gt;
+      &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;8080:8080&amp;quot;&lt;/span&gt;
+    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;volumes&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
+      &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;/srv/dockercontainer/jenkins_home:/var/jenkins_home&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;strong&gt;image&lt;/strong&gt; -- the directive specifies container to use, in this case it's Jenkins container &lt;a class="footnote-reference" href="#id10" id="id6"&gt;[4]&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;user&lt;/strong&gt; -- user/group mapping, 'uid:gid' from the container is mapped 'uid:gid' of the host.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;ports&lt;/strong&gt; -- port mapping from the container to the host.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;volumes&lt;/strong&gt; -- directory (docker volume) mapping, between the host and the container.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="section" id="starting-up-the-container"&gt;
+&lt;h2&gt;Starting up the container&lt;/h2&gt;
+&lt;p&gt;Go to the directory containing &lt;strong&gt;docker-compose.yml&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;The following command starts the container in foreground, the container needs to be run in the foreground, as during the setup, system activation code for Jenkins will be printed to the console.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# docker-compose up
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Open a browser and go to &lt;strong&gt;http://localhost:8080&lt;/strong&gt;. Once initial setup is completed, stop the container with &lt;em&gt;Ctrl+C&lt;/em&gt;, then start it as a daemon.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# docker-compose up -d
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To shut down the container running in daemon mode, execute the following.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# docker-compose stop
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="deleting-the-container"&gt;
+&lt;h2&gt;Deleting the container&lt;/h2&gt;
+&lt;p&gt;To remove container setup, run the following command from the directory where &lt;strong&gt;docker-compose.yml&lt;/strong&gt; is located.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# docker-compose rm jenkins
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The data generated by Jenkins in docker container is saved in &lt;strong&gt;/srv/dockercontainer/jenkins_home&lt;/strong&gt; with user 'jenkins' and group 'jenkins'.&lt;/p&gt;
+&lt;table class="docutils footnote" frame="void" id="id7" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[1]&lt;/td&gt;&lt;td&gt;FSOSS 2016 -- &lt;a class="reference external" href="http://cdot.fsoss.ca/2016/"&gt;http://cdot.fsoss.ca/2016/&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils footnote" frame="void" id="id8" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[2]&lt;/td&gt;&lt;td&gt;Docker installation on Debian -- &lt;a class="reference external" href="https://docs.docker.com/engine/installation/linux/debian/"&gt;https://docs.docker.com/engine/installation/linux/debian/&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils footnote" frame="void" id="id9" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[3]&lt;/td&gt;&lt;td&gt;Install Compose -- &lt;a class="reference external" href="https://docs.docker.com/compose/install/"&gt;https://docs.docker.com/compose/install/&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils footnote" frame="void" id="id10" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[4]&lt;/td&gt;&lt;td&gt;Official Jenkins Docker image -- &lt;a class="reference external" href="https://hub.docker.com/_/jenkins/"&gt;https://hub.docker.com/_/jenkins/&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils footnote" frame="void" id="id11" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[5]&lt;/td&gt;&lt;td&gt;Manage data in containers -- &lt;a class="reference external" href="https://docs.docker.com/engine/tutorials/dockervolumes/"&gt;https://docs.docker.com/engine/tutorials/dockervolumes/&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+</summary><category term="python"></category><category term="jenkins"></category><category term="docker"></category><category term="debian"></category></entry><entry><title>Linting and declaration lookup for Python with Sublime Text 3</title><link href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html" rel="alternate"></link><published>2016-10-23T22:18:00-04:00</published><updated>2016-10-23T22:18:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-23:linting-and-declaration-lookup-for-python-with-sublime-text-3.html</id><summary type="html">&lt;p&gt;Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:&lt;/p&gt;
 &lt;ul class="simple"&gt;
 &lt;li&gt;linting -- letting the computer keep track of consistent coding style&lt;/li&gt;
 &lt;li&gt;definition lookup -- letting the computer to look up location of definitions&lt;/li&gt;

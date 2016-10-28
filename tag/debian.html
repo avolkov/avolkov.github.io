@@ -21,7 +21,139 @@
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html">Linting and declaration lookup for Python with Sublime Text 3</a></h1>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/running-jenkins-in-docker.html">Running Jenkins in Docker</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2016-10-28T10:19:00-04:00">
+                Published: Fri 28 October 2016
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/jenkins.html">jenkins</a> <a href="https://avolkov.github.io/tag/docker.html">docker</a> <a href="https://avolkov.github.io/tag/debian.html">debian</a> </p>
+</footer><!-- /.post-info --><div class="section" id="requirements">
+<h2>Requirements</h2>
+<p>I went to an FSOSS 2016 <a class="footnote-reference" href="#id7" id="id1">[1]</a> conference and I found one talk on Jenkins to be particularly interesting.</p>
+<p>I wanted to try Jenkins, without configuring Java on my laptop or setting up a VM. Using Jenkins docker container would be the easiest solution for this kind of problem.</p>
+</div>
+<div class="section" id="prerequisites">
+<h2>Prerequisites</h2>
+<p>This article assumes Docker <a class="footnote-reference" href="#id8" id="id2">[2]</a> and Docker Compose <a class="footnote-reference" href="#id9" id="id3">[3]</a> have been set up.</p>
+</div>
+<div class="section" id="jenkins-container">
+<h2>Jenkins container</h2>
+<p>I used an official container built by Jenkins community <a class="footnote-reference" href="#id10" id="id4">[4]</a>.</p>
+<p>The container comes with these settings:</p>
+<ul class="simple">
+<li>Jenkins server runs on ports 5000 and 8000</li>
+<li>Jenkins settings saved to <strong>/var/jenkins_home</strong> and the directory is exposed as a docker volume</li>
+<li>user / group ids are set to jenkins / jenkins with uid/gid set to 1001/1001.</li>
+</ul>
+</div>
+<div class="section" id="volume-setup">
+<h2>Volume Setup</h2>
+<p>Docker volume settings, specify container directory mapping between host and container <a class="footnote-reference" href="#id11" id="id5">[5]</a>, allowing files generated  inside of the container to persist. The host system will store the data in <strong>/srv/dockercontainer/jenkins_home</strong>.</p>
+<p>Following steps to set up docker volume and permission mapping on the host.</p>
+<ol class="arabic simple">
+<li>Create docker volume path on the host</li>
+</ol>
+<div class="highlight"><pre><span></span># mkdir /srv/dockercontainer/jenkins_home
+</pre></div>
+<ol class="arabic simple" start="2">
+<li>Set up user/group mapping on the host.</li>
+</ol>
+<div class="highlight"><pre><span></span># groupadd -gid 20000 jenkins
+# useradd --home-dir /srv/dockercontainer/jenkins_home \
+   --uid 20000 --gid 20000 -s /bin/false -M jenkins
+# chown -R jenkins:jenkins /srv/dockercontainer/jenkins_home
+</pre></div>
+</div>
+<div class="section" id="docker-compose-file">
+<h2>Docker compose file</h2>
+<p><strong>docker-compose.yml</strong> specifies startup settings for Jenkins container.</p>
+<div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">version</span><span class="p p-Indicator">:</span> <span class="s">&#39;2&#39;</span>
+<span class="l l-Scalar l-Scalar-Plain">services</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">jenkins</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">image</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">jenkins</span>
+    <span class="l l-Scalar l-Scalar-Plain">user</span><span class="p p-Indicator">:</span> <span class="s">&quot;20000:20000&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">ports</span><span class="p p-Indicator">:</span>
+      <span class="p p-Indicator">-</span> <span class="s">&quot;5000:5000&quot;</span>
+      <span class="p p-Indicator">-</span> <span class="s">&quot;8080:8080&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">volumes</span><span class="p p-Indicator">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/srv/dockercontainer/jenkins_home:/var/jenkins_home</span>
+</pre></div>
+<ul class="simple">
+<li><strong>image</strong> -- the directive specifies container to use, in this case it's Jenkins container <a class="footnote-reference" href="#id10" id="id6">[4]</a>.</li>
+<li><strong>user</strong> -- user/group mapping, 'uid:gid' from the container is mapped 'uid:gid' of the host.</li>
+<li><strong>ports</strong> -- port mapping from the container to the host.</li>
+<li><strong>volumes</strong> -- directory (docker volume) mapping, between the host and the container.</li>
+</ul>
+</div>
+<div class="section" id="starting-up-the-container">
+<h2>Starting up the container</h2>
+<p>Go to the directory containing <strong>docker-compose.yml</strong>.</p>
+<p>The following command starts the container in foreground, the container needs to be run in the foreground, as during the setup, system activation code for Jenkins will be printed to the console.</p>
+<div class="highlight"><pre><span></span># docker-compose up
+</pre></div>
+<p>Open a browser and go to <strong>http://localhost:8080</strong>. Once initial setup is completed, stop the container with <em>Ctrl+C</em>, then start it as a daemon.</p>
+<div class="highlight"><pre><span></span># docker-compose up -d
+</pre></div>
+<p>To shut down the container running in daemon mode, execute the following.</p>
+<div class="highlight"><pre><span></span># docker-compose stop
+</pre></div>
+</div>
+<div class="section" id="deleting-the-container">
+<h2>Deleting the container</h2>
+<p>To remove container setup, run the following command from the directory where <strong>docker-compose.yml</strong> is located.</p>
+<div class="highlight"><pre><span></span># docker-compose rm jenkins
+</pre></div>
+<p>The data generated by Jenkins in docker container is saved in <strong>/srv/dockercontainer/jenkins_home</strong> with user 'jenkins' and group 'jenkins'.</p>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>FSOSS 2016 -- <a class="reference external" href="http://cdot.fsoss.ca/2016/">http://cdot.fsoss.ca/2016/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td>Docker installation on Debian -- <a class="reference external" href="https://docs.docker.com/engine/installation/linux/debian/">https://docs.docker.com/engine/installation/linux/debian/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[3]</td><td>Install Compose -- <a class="reference external" href="https://docs.docker.com/compose/install/">https://docs.docker.com/compose/install/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id10" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[4]</td><td>Official Jenkins Docker image -- <a class="reference external" href="https://hub.docker.com/_/jenkins/">https://hub.docker.com/_/jenkins/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[5]</td><td>Manage data in containers -- <a class="reference external" href="https://docs.docker.com/engine/tutorials/dockervolumes/">https://docs.docker.com/engine/tutorials/dockervolumes/</a></td></tr>
+</tbody>
+</table>
+</div>
+                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html" rel="bookmark"
+                           title="Permalink to Linting and declaration lookup for Python with Sublime Text 3">Linting and declaration lookup for Python with Sublime Text 3</a></h1>
+                </header>
+
+                <div class="entry-content">
 <footer class="post-info">
         <abbr class="published" title="2016-10-23T22:18:00-04:00">
                 Published: Sun 23 October 2016
@@ -32,132 +164,13 @@
         </address>
 <p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
 <p>tags: <a href="https://avolkov.github.io/tag/sublime.html">sublime</a> <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/anaconda.html">anaconda</a> <a href="https://avolkov.github.io/tag/programming.html">programming</a> <a href="https://avolkov.github.io/tag/debian.html">debian</a> </p>
-</footer><!-- /.post-info --><p>Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:</p>
+</footer><!-- /.post-info -->                <p>Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:</p>
 <ul class="simple">
 <li>linting -- letting the computer keep track of consistent coding style</li>
-<li>definition lookup -- letting the computer to look up location of definitions</li>
-</ul>
-<p>Linting is provided by SublimeLinter <a class="footnote-reference" href="#id7" id="id1">[1]</a> and function definition lookup by Anaconda Python IDE <a class="footnote-reference" href="#id8" id="id2">[2]</a>. This article assumes Package Control <a class="footnote-reference" href="#id9" id="id3">[3]</a>  is already been installed.</p>
-<div class="section" id="prerequisites">
-<h2>Prerequisites</h2>
-<p>Install flake8 code analyzer <a class="footnote-reference" href="#id10" id="id4">[4]</a> on the system for both Python 2 and 3, it's required by SublimeLinter.</p>
-<div class="highlight"><pre><span></span>apt-get install python-flake8 python3-flake8
-</pre></div>
-</div>
-<div class="section" id="sublime-package-installation">
-<h2>Sublime Package Installation</h2>
-<p>Install the following Sublime packages: <em>SublimeLinter</em>, <em>SublimeLinter-flake8</em> and <em>Anaconda</em>.</p>
-<p>For each package repeat the following process -- Invoke package control by bringing command pallet with <strong>Ctrl+Shift+p</strong> start typing <em>install</em>, then select <em>Package Control: Install Package</em> type package name and hit enter.</p>
-</div>
-<div class="section" id="project-preferences">
-<h2>Project Preferences</h2>
-<p>These are per-project settings, go to <em>Project -&gt; Edit Project</em> and paste the following config. If <em>Edit Project</em> item is unavailable, save the project with <em>Project -&gt; Save Project As...</em></p>
-<div class="section" id="top-level-settings-sections">
-<h3>Top-level settings sections</h3>
-<p><strong>SublimeLinter</strong> -- all the settings related to SublimeLinter</p>
-<p><strong>build_systems</strong> -- Default Anaconda build system, configuration parameters to run external program to process project files <a class="footnote-reference" href="#id11" id="id5">[5]</a></p>
-<p><strong>folders</strong> -- Sublime declaration on folders included in the project.</p>
-<p><strong>settings</strong> -- Anaconda interpreter / project settings</p>
-</div>
-<div class="section" id="other-parameters">
-<h3>Other parameters</h3>
-<p>The configuration parameter <em>&#64;python</em> specifies syntax version to lint, in this case Python 2.7.</p>
-<p>In all paths, replace {user} and {project} with actual user and project names. I follow a convention of using project name as the name of the virtual environment for that project.</p>
-<p><strong>extra_paths</strong> -- parameter specifies one or more path to a virtual environment in order to make declaration lookup work for third-party libraries. <a class="footnote-reference" href="#id12" id="id6">[6]</a></p>
-<div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="nt">&quot;SublimeLinter&quot;</span><span class="p">:</span>
-    <span class="p">{</span>
-        <span class="nt">&quot;@python&quot;</span><span class="p">:</span> <span class="mf">2.7</span><span class="p">,</span>
-        <span class="nt">&quot;linters&quot;</span><span class="p">:</span>
-        <span class="p">{</span>
-            <span class="nt">&quot;flake8&quot;</span><span class="p">:</span>
-            <span class="p">{</span>
-                <span class="nt">&quot;max-line-length&quot;</span><span class="p">:</span> <span class="mi">120</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">},</span>
-    <span class="nt">&quot;build_systems&quot;</span><span class="p">:</span>
-    <span class="p">[</span>
-        <span class="p">{</span>
-            <span class="nt">&quot;file_regex&quot;</span><span class="p">:</span> <span class="s2">&quot;^[ ]*File \&quot;(...*?)\&quot;, line ([0-9]*)&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Anaconda Python Builder&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;selector&quot;</span><span class="p">:</span> <span class="s2">&quot;source.python&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;shell_cmd&quot;</span><span class="p">:</span> <span class="s2">&quot;\&quot;/home/{user}/.virtualenvs/{project}/bin/python\&quot; -u \&quot;$file\&quot;&quot;</span>
-        <span class="p">}</span>
-    <span class="p">],</span>
-    <span class="nt">&quot;folders&quot;</span><span class="p">:</span>
-    <span class="p">[</span>
-        <span class="p">{</span>
-            <span class="nt">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;/home/{user}/repos/{project}&quot;</span>
-        <span class="p">}</span>
-    <span class="p">],</span>
-    <span class="nt">&quot;settings&quot;</span><span class="p">:</span>
-    <span class="p">{</span>
-        <span class="nt">&quot;python_interpreter&quot;</span><span class="p">:</span> <span class="s2">&quot;/home/{user}/.virtualenvs/{project}/bin/python&quot;</span><span class="p">,</span>
-        <span class="nt">&quot;extra_paths&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;/home/{user}/.virtualenvs/{project}/&quot;</span><span class="p">],</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="key-shortcut-for-anaconda-goto-definition-lookup">
-<h2>Key Shortcut for Anaconda 'Goto definition..' lookup</h2>
-<p>Anaconda <strong>Goto definition..</strong> action is different from from Sublime Text 3 Built-in <strong>Go To Definition..</strong>, the latter works just fine for project source files, but it doesn't allow for settings in external paths.</p>
-<p>The former can be triggered either by right-clicking on a term, then selecting <strong>Anaconda -&gt; Goto Definition</strong>, or using default key binding <strong>Ctrl + Alt + g</strong>; I find both of the shortcuts inconvenient to use.</p>
-<p>The configuration below assigns this action to <strong>F8</strong> key (which doesn't seem to be used by anything).</p>
-<p>Paste the following code in <strong>Preferences -&gt; Package Settings -&gt; Anaconda -&gt; Key Bindings - User</strong></p>
-<div class="highlight"><pre><span></span><span class="p">[</span>
-    <span class="p">{</span>
-        <span class="nt">&quot;command&quot;</span><span class="p">:</span> <span class="s2">&quot;anaconda_goto&quot;</span><span class="p">,</span>
-        <span class="nt">&quot;keys&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;f8&quot;</span><span class="p">],</span>
-        <span class="nt">&quot;context&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;selector&quot;</span><span class="p">,</span> <span class="nt">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;equal&quot;</span><span class="p">,</span> <span class="nt">&quot;operand&quot;</span><span class="p">:</span> <span class="s2">&quot;source.python&quot;</span><span class="p">}]</span>
-    <span class="p">}</span>
-<span class="p">]</span>
-</pre></div>
-<p>Now set cursor on a term with definition to lookup and press <strong>F8</strong>.</p>
-<table class="docutils footnote" frame="void" id="id7" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[1]</td><td>SublimeLinter 3 -- <a class="reference external" href="http://www.sublimelinter.com/en/latest/">http://www.sublimelinter.com/en/latest/</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id8" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[2]</td><td>Anaconda Python IDE -- <a class="reference external" href="http://damnwidget.github.io/anaconda/">http://damnwidget.github.io/anaconda/</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id9" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[3]</td><td>Package Control, the Sublime Text package manager -- <a class="reference external" href="https://packagecontrol.io/">https://packagecontrol.io/</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id10" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[4]</td><td>Flake 8 the modular source checker, pep8, pyflakes and co -- <a class="reference external" href="https://pypi.python.org/pypi/flake8">https://pypi.python.org/pypi/flake8</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id11" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[5]</td><td>Sublime Text Unofficial Documentation / Build Systems (Batch Processing) -- <a class="reference external" href="http://docs.sublimetext.info/en/latest/file_processing/build_systems.html">http://docs.sublimetext.info/en/latest/file_processing/build_systems.html</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id12" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[6]</td><td>Configure Anaconda the Right Way -- <a class="reference external" href="http://damnwidget.github.io/anaconda/anaconda_settings/">http://damnwidget.github.io/anaconda/anaconda_settings/</a></td></tr>
-</tbody>
-</table>
-</div>
-                </article>
-            </aside><!-- /#featured -->
-                <section id="content" class="body">
-                    <h1>Other articles</h1>
-                    <hr />
-                    <ol id="posts-list" class="hfeed">
+<li>definition lookup -- letting the computer to look ...</li></ul>
+                <a class="readmore" href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
 
             <li><article class="hentry">
                 <header>
