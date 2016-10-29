@@ -30,7 +30,7 @@
 &lt;ol class="arabic simple" start="2"&gt;
 &lt;li&gt;Set up user/group mapping on the host.&lt;/li&gt;
 &lt;/ol&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# groupadd -gid 20000 jenkins
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# groupadd --gid 20000 jenkins
 # useradd --home-dir /srv/dockercontainer/jenkins_home \
    --uid 20000 --gid 20000 -s /bin/false -M jenkins
 # chown -R jenkins:jenkins /srv/dockercontainer/jenkins_home
