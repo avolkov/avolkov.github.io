@@ -1,5 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/misc.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2016-10-28T10:19:00-04:00</updated><entry><title>Running Jenkins in Docker</title><link href="https://avolkov.github.io/running-jenkins-in-docker.html" rel="alternate"></link><published>2016-10-28T10:19:00-04:00</published><updated>2016-10-28T10:19:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-28:running-jenkins-in-docker.html</id><summary type="html">&lt;div class="section" id="requirements"&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/misc.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2016-11-16T00:00:00-05:00</updated><entry><title>Cricket -- awesome ugly test visualizer</title><link href="https://avolkov.github.io/cricket-awesome-ugly-test-visualizer.html" rel="alternate"></link><published>2016-11-16T00:00:00-05:00</published><updated>2016-11-16T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-11-16:cricket-awesome-ugly-test-visualizer.html</id><summary type="html">&lt;p&gt;I've been writing tests for a while and running them with nose2. One of more labor-intensive interactions with nose2 is typing out paths to individual tests. Cricket -- a part of BeeWare suite solves copying-and-pasting test name problem and provides a nice user interface to summarize results from running test suite.&lt;/p&gt;
+&lt;div class="section" id="installing-dependencies"&gt;
+&lt;h2&gt;Installing dependencies&lt;/h2&gt;
+&lt;p&gt;Cricket has a couple of system-level dependencies: IDLE editor and IDLE library and TkInter.&lt;/p&gt;
+&lt;p&gt;For Debian,&lt;/p&gt;
+&lt;p&gt;Running Cricket under Python 2.7 the following libraries need to be installed&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-get install idle idle-python2.7 python-tk
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Running Cricket Python 3.x the dependencies are&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-get install idle3 idle-python3.5 python-tk
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="installing-cricket"&gt;
+&lt;h2&gt;Installing cricket&lt;/h2&gt;
+&lt;p&gt;Cricket is installed using pip, you can install it in the existing project, or add it in setup.py as one of the dependencies.&lt;/p&gt;
+&lt;p&gt;Cricket pip page -- &lt;a class="reference external" href="https://pypi.python.org/pypi/cricket"&gt;https://pypi.python.org/pypi/cricket&lt;/a&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test)$ pip install cricket
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="running-cricket"&gt;
+&lt;h2&gt;Running cricket&lt;/h2&gt;
+&lt;p&gt;For any python project written with unittest, run &lt;strong&gt;cricket-unittst&lt;/strong&gt; for django projects, run &lt;strong&gt;cricket-django&lt;/strong&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="runnig-sample-pyramid-project-with-cricket"&gt;
+&lt;h2&gt;Runnig sample pyramid project with cricket&lt;/h2&gt;
+&lt;p&gt;Getting started with cricket -- this example of running Pyramid test under Python 3.5&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Create Python 3 virtualenv&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ mkvirtualenv cricket-test --python `which python3`
+(cricket-test) $ python -V
+Python 3.5.2+
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Pull Pyramid source code&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test) $ git clone https://github.com/Pylons/pyramid.git
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Install Pyramid dependencies&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test) $ cd pyramid/
+(cricket-test) $ pip install -e .
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Install dependencies to run tests&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test) $ pip install -e .[testing]
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Install cricket&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test) $ pip install cricket
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Run cricket&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test) $ cricket-unittest &amp;amp;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The following UI should appear. If you want to be able to use code coverage tool -- Duvet -- &lt;a class="reference external" href="https://pypi.python.org/pypi/duvet"&gt;https://pypi.python.org/pypi/duvet&lt;/a&gt;, install it with pip using the following command&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test) $ pip install duvet
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Cricket: running all test by pressing &lt;strong&gt;Run All&lt;/strong&gt;&lt;/p&gt;
+&lt;img alt="Cricket - run all tests" class="align-center" src="images/0001_cricket_ran.png" style="width: 600px; height: 484px;" /&gt;
+&lt;p&gt;Cricket: copying single test, by selecting a test then pressing &lt;strong&gt;Run Selected&lt;/strong&gt;&lt;/p&gt;
+&lt;img alt="Cricket - ran an individual test" class="align-center" src="images/0002_cricket_individual_test.png" style="width: 600px; height: 484px;" /&gt;
+&lt;p&gt;Cricket: running a group of tests, by selecting a top-level filename or class, then pressing &lt;strong&gt;Run Selected&lt;/strong&gt;&lt;/p&gt;
+&lt;img alt="Cricket -- ran a group of tests" class="align-center" src="images/0003_cricket_ran_test_group.png" style="width: 600px; height: 484px;" /&gt;
+&lt;/div&gt;
+&lt;div class="section" id="missing-dependencies-errors"&gt;
+&lt;h2&gt;Missing dependencies errors&lt;/h2&gt;
+&lt;p&gt;If any of system packages is missing from the system the following errors will be triggered when trying to run Cricket.&lt;/p&gt;
+&lt;div class="section" id="missing-python-tkinter"&gt;
+&lt;h3&gt;Missing python-tkinter&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Traceback (most recent call last):
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/bin/cricket-unittest&amp;quot;, line 7, in &amp;lt;module&amp;gt;
+from cricket.unittest.__main__ import main
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/unittest/__main__.py&amp;quot;, line 4, in &amp;lt;module&amp;gt;
+from cricket.main import main as cricket_main
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/main.py&amp;quot;, line 13, in &amp;lt;module&amp;gt;
+from tkinter import *
+ImportError: No module named tkinter
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="missing-idle-idle-python"&gt;
+&lt;h3&gt;Missing idle / idle-python&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    Traceback (most recent call last):
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/bin/cricket-unittest&amp;quot;, line 7, in &amp;lt;module&amp;gt;
+from cricket.unittest.__main__ import main
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/unittest/__main__.py&amp;quot;, line 4, in &amp;lt;module&amp;gt;
+from cricket.main import main as cricket_main
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/main.py&amp;quot;, line 15, in &amp;lt;module&amp;gt;
+from cricket.view import (
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/view.py&amp;quot;, line 29, in &amp;lt;module&amp;gt;
+from tkreadonly import ReadOnlyText
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/tkreadonly.py&amp;quot;, line 15, in &amp;lt;module&amp;gt;
+&amp;quot;to work out how to install IDLE and idlelib.&amp;quot;)
+Exception: idlelib could not be found. Check your operating system instructions to work out how to install IDLE and idlelib.
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="resources"&gt;
+&lt;h2&gt;Resources&lt;/h2&gt;
+&lt;p&gt;Cricket github page -- &lt;a class="reference external" href="https://github.com/pybee/cricket"&gt;https://github.com/pybee/cricket&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Duvet github page -- &lt;a class="reference external" href="https://github.com/pybee/duvet"&gt;https://github.com/pybee/duvet&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;python.__init__ podcast: An interview with Russel Keith McGee -- &lt;a class="reference external" href="http://podcastinit.podbean.com/e/episode-64-beeware-with-russell-keith-magee/"&gt;http://podcastinit.podbean.com/e/episode-64-beeware-with-russell-keith-magee/&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+</summary><category term="python"></category><category term="testing"></category><category term="cricket"></category></entry><entry><title>Running Jenkins in Docker</title><link href="https://avolkov.github.io/running-jenkins-in-docker.html" rel="alternate"></link><published>2016-10-28T10:19:00-04:00</published><updated>2016-10-28T10:19:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-28:running-jenkins-in-docker.html</id><summary type="html">&lt;div class="section" id="requirements"&gt;
 &lt;h2&gt;Requirements&lt;/h2&gt;
 &lt;p&gt;I went to an FSOSS 2016 &lt;a class="footnote-reference" href="#id7" id="id1"&gt;[1]&lt;/a&gt; conference and I found one talk on Jenkins to be particularly interesting.&lt;/p&gt;
 &lt;p&gt;I wanted to try Jenkins, without configuring Java on my laptop or setting up a VM. Using Jenkins docker container would be the easiest solution for this kind of problem.&lt;/p&gt;
