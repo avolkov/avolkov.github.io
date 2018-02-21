@@ -1,5 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/misc.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2016-10-23T22:18:00-04:00</updated><entry><title>Linting and declaration lookup for Python with Sublime Text 3</title><link href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html" rel="alternate"></link><published>2016-10-23T22:18:00-04:00</published><updated>2016-10-23T22:18:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-23:linting-and-declaration-lookup-for-python-with-sublime-text-3.html</id><summary type="html">&lt;p&gt;Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/misc.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2018-02-21T00:00:00-05:00</updated><entry><title>Upgrading from old version of Gitlab CE</title><link href="https://avolkov.github.io/upgrading-from-old-version-of-gitlab-ce.html" rel="alternate"></link><published>2018-02-21T00:00:00-05:00</published><updated>2018-02-21T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2018-02-21:upgrading-from-old-version-of-gitlab-ce.html</id><summary type="html">&lt;p&gt;I've came across an old instance of Gitlab running on CentOS 6.&lt;/p&gt;
+&lt;p&gt;The old instance version is 8.10.5 installed using omnibus package. The omnibus package contains Postgres database, which needs to be updated from 9.2.x used in 8.10 release to 9.6.x used in the current Gitlab 10.4.4.&lt;/p&gt;
+&lt;p&gt;The documentation is not entirely complete, as I be not many people are running Gitlab instance from 2015 that hasn't been updated. There are few mentions of  &lt;cite&gt;gitlab-ctl pg-upgrade&lt;/cite&gt; command but the command is not available in Gitlab 8.10.5, trying to run that will provoke gitlab-ctl to give the following response -- &amp;quot;i don't know that command&amp;quot;&lt;/p&gt;
+&lt;p&gt;What I eventually figured out, and what needs to be done is to update to version 9.5.10 first -- that would update included postgres to 9.6.x&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# yum install gitlab-ce-9.5.10-ce.0.el6.x86_64.rpm&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then update gitlab to the latest version.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# yum install gitlab-ce&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="section" id="additional-notes"&gt;
+&lt;h2&gt;Additional notes&lt;/h2&gt;
+&lt;p&gt;If you need to test backups for an old version of Gitlab, you can download and install that version of the package from here -- &lt;a class="reference external" href="https://packages.gitlab.com/app/gitlab/gitlab-ce/search?filter=rpms&amp;amp;q=gitlab-ce-8.10&amp;amp;dist="&gt;https://packages.gitlab.com/app/gitlab/gitlab-ce/search?filter=rpms&amp;amp;q=gitlab-ce-8.10&amp;amp;dist=&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;The package description for the specific package I'm using is here -- &lt;a class="reference external" href="https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/6/gitlab-ce-8.10.5-ce.0.el6.x86_64.rpm"&gt;https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/6/gitlab-ce-8.10.5-ce.0.el6.x86_64.rpm&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;The page also contains installation instructions. Once download and install is finished, run reconfigure script.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# gitlab-ctl reconfigure&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The script will create the location &lt;strong&gt;/var/opt/gitlab/backups/&lt;/strong&gt; into which Gitlab backup files should be copied&lt;/p&gt;
+&lt;p&gt;Restore gitlab from backup using the following command&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# gitlab-rake gitlab:backup:restore&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then reboot the system. This should get you to the point where it is possible to test Gitlab upgrade process.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="gpg-error"&gt;
+&lt;h2&gt;GPG error&lt;/h2&gt;
+&lt;p&gt;Older version of Gitlab ship with unsigned packages and &lt;strong&gt;yum install&lt;/strong&gt; command would refuse to run returning this error message -- &amp;quot;Package is not signed&amp;quot;.&lt;/p&gt;
+&lt;p&gt;A workaround is to set &lt;strong&gt;gpgcheck=0&lt;/strong&gt; in &lt;strong&gt;/etc/yum.repos.d/gitlab_gitlab-ce.repo&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+</summary><category term="git"></category><category term="gitlab"></category></entry><entry><title>Linting and declaration lookup for Python with Sublime Text 3</title><link href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html" rel="alternate"></link><published>2016-10-23T22:18:00-04:00</published><updated>2016-10-23T22:18:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-23:linting-and-declaration-lookup-for-python-with-sublime-text-3.html</id><summary type="html">&lt;p&gt;Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:&lt;/p&gt;
 &lt;ul class="simple"&gt;
 &lt;li&gt;linting -- letting the computer keep track of consistent coding style&lt;/li&gt;
 &lt;li&gt;definition lookup -- letting the computer to look up location of definitions&lt;/li&gt;
@@ -240,7 +267,7 @@ on &lt;a class="reference external" href="http://www.circuidipity.com/pelican.ht
                 &lt;span class="n"&gt;search_list&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;prep_item&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;item&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;outp&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;search_list&lt;/span&gt;
 
-&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="vm"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
     &lt;span class="n"&gt;searches&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;extract_searches&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;log_file&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
     &lt;span class="n"&gt;pprint&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;searches&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -286,7 +313,7 @@ The code will look much cleaner, generators are a little slower than in-memory o
 
 &lt;span class="o"&gt;...&lt;/span&gt;
 
-&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="vm"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
     &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;log_file&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;r&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;logfile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
         &lt;span class="n"&gt;searches&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;extract_searches&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;logfile&lt;/span&gt;&lt;span class="p"&gt;)]&lt;/span&gt;
     &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;searches&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -421,7 +448,7 @@ iface default inet dhcp
 &lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Edit &lt;strong&gt;/etc/wpa_supplicant/wpa_supplicant.conf&lt;/strong&gt; as such.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nv"&gt;ctrl_interface&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;DIR&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;/var/run/wpa_supplicant &lt;span class="nv"&gt;GROUP&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;netdev
-&lt;span class="nv"&gt;update_config&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;1
+&lt;span class="nv"&gt;update_config&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;
 
 &lt;span class="nv"&gt;network&lt;/span&gt;&lt;span class="o"&gt;={&lt;/span&gt;
         &lt;span class="nv"&gt;ssid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;AP Name&amp;quot;&lt;/span&gt;

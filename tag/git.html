@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>disparate notes - git</title>
+        <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
+        <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
+                <nav><ul>
+                    <li><a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a></li>
+                    <li><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
+                    <li><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
+                    <li><a href="https://avolkov.github.io/category/tools.html">tools</a></li>
+                    <li><a href="https://avolkov.github.io/category/web-application-development.html">web application development</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/upgrading-from-old-version-of-gitlab-ce.html">Upgrading from old version of Gitlab CE</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2018-02-21T00:00:00-05:00">
+                Published: Wed 21 February 2018
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/git.html">git</a> <a href="https://avolkov.github.io/tag/gitlab.html">gitlab</a> </p>
+</footer><!-- /.post-info --><p>I've came across an old instance of Gitlab running on CentOS 6.</p>
+<p>The old instance version is 8.10.5 installed using omnibus package. The omnibus package contains Postgres database, which needs to be updated from 9.2.x used in 8.10 release to 9.6.x used in the current Gitlab 10.4.4.</p>
+<p>The documentation is not entirely complete, as I be not many people are running Gitlab instance from 2015 that hasn't been updated. There are few mentions of  <cite>gitlab-ctl pg-upgrade</cite> command but the command is not available in Gitlab 8.10.5, trying to run that will provoke gitlab-ctl to give the following response -- &quot;i don't know that command&quot;</p>
+<p>What I eventually figured out, and what needs to be done is to update to version 9.5.10 first -- that would update included postgres to 9.6.x</p>
+<div class="highlight"><pre><span></span><span class="c1"># yum install gitlab-ce-9.5.10-ce.0.el6.x86_64.rpm</span>
+</pre></div>
+<p>Then update gitlab to the latest version.</p>
+<div class="highlight"><pre><span></span><span class="c1"># yum install gitlab-ce</span>
+</pre></div>
+<div class="section" id="additional-notes">
+<h2>Additional notes</h2>
+<p>If you need to test backups for an old version of Gitlab, you can download and install that version of the package from here -- <a class="reference external" href="https://packages.gitlab.com/app/gitlab/gitlab-ce/search?filter=rpms&amp;q=gitlab-ce-8.10&amp;dist=">https://packages.gitlab.com/app/gitlab/gitlab-ce/search?filter=rpms&amp;q=gitlab-ce-8.10&amp;dist=</a></p>
+<p>The package description for the specific package I'm using is here -- <a class="reference external" href="https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/6/gitlab-ce-8.10.5-ce.0.el6.x86_64.rpm">https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/6/gitlab-ce-8.10.5-ce.0.el6.x86_64.rpm</a></p>
+<p>The page also contains installation instructions. Once download and install is finished, run reconfigure script.</p>
+<div class="highlight"><pre><span></span><span class="c1"># gitlab-ctl reconfigure</span>
+</pre></div>
+<p>The script will create the location <strong>/var/opt/gitlab/backups/</strong> into which Gitlab backup files should be copied</p>
+<p>Restore gitlab from backup using the following command</p>
+<div class="highlight"><pre><span></span><span class="c1"># gitlab-rake gitlab:backup:restore</span>
+</pre></div>
+<p>Then reboot the system. This should get you to the point where it is possible to test Gitlab upgrade process.</p>
+</div>
+<div class="section" id="gpg-error">
+<h2>GPG error</h2>
+<p>Older version of Gitlab ship with unsigned packages and <strong>yum install</strong> command would refuse to run returning this error message -- &quot;Package is not signed&quot;.</p>
+<p>A workaround is to set <strong>gpgcheck=0</strong> in <strong>/etc/yum.repos.d/gitlab_gitlab-ce.repo</strong></p>
+</div>
+                </article>
+            </aside><!-- /#featured -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                            <li><a href="https://twitter.com/a_volkov">twitter</a></li>
+                            <li><a href="http://flamy.ca">homepage</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-87694404-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = 'https://ssl.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+</body>
+</html>
