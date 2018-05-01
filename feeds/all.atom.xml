@@ -1,32 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/all.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2018-02-21T00:00:00-05:00</updated><entry><title>Upgrading from old version of Gitlab CE</title><link href="https://avolkov.github.io/upgrading-from-old-version-of-gitlab-ce.html" rel="alternate"></link><published>2018-02-21T00:00:00-05:00</published><updated>2018-02-21T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2018-02-21:upgrading-from-old-version-of-gitlab-ce.html</id><summary type="html">&lt;p&gt;I've came across an old instance of Gitlab running on CentOS 6.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/all.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2018-05-01T00:00:00-04:00</updated><entry><title>Quick gitlab runner setup</title><link href="https://avolkov.github.io/quick-gitlab-runner-setup.html" rel="alternate"></link><published>2018-05-01T00:00:00-04:00</published><updated>2018-05-01T00:00:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2018-05-01:/quick-gitlab-runner-setup.html</id><summary type="html">&lt;p class="first last"&gt;gitlab-runner setup for simple ci configuration&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;Gitlab runner is a continuous integration tool that I've found it to be a lot easier than Jenkins to wrap my head around when it comes to deploying source code to demo machines.&lt;/p&gt;
+&lt;p&gt;In this scenario gitlab runner it pulls per-project source code to a runner machine then executes any of the commands specified in &lt;cite&gt;.gitlab-ci.yml&lt;/cite&gt; from source code root directory.&lt;/p&gt;
+&lt;p&gt;Here's a sample configuration of updating source code on buildout-based Plone 5 project:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;stages:
+  - deploy
+001 stop plone server:
+  stage: deploy
+  script:
+    - ./bin/supervisorctl shutdown
+  cache:
+    paths:
+      - .installed.cfg
+      - bin/*
+      - develop-eggs/*
+      - downloads/*
+      - eggs/*
+      - parts/*
+      - var/*
+002 rebuild project:
+  stage: deploy
+  script:
+    - ./bin/buildout -v -c buildout_prod.cfg
+    - ./bin/supervisord
+  cache:
+    paths:
+      - .installed.cfg
+      - bin/*
+      - develop-eggs/*
+      - downloads/*
+      - eggs/*
+      - parts/*
+      - var/*
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I've been repeating a task of installing a runner for a particular projects -- setting up a gitlab runner, and I've found it to be spread over at least 3 documents:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://docs.gitlab.com/runner/install/linux-repository.html"&gt;Install GitLab Runner using the official GitLab repositories&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://docs.gitlab.com/runner/register/index.html"&gt;Registering runners&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://docs.gitlab.com/runner/commands/README.html"&gt;Gitlab Runner commands&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;To get runner installed and registered, the following steps should be taken:&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;Add gitlab-runner repo&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;CentOS 7&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | sudo bash
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Debian&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="2"&gt;
+&lt;li&gt;Install gitlab-runner package&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;CentOS 7&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# yum install gitlab-runner
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Debian&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# apt-get install gitlab-runner
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="3"&gt;
+&lt;li&gt;Remove default gitlab-runner configuration (as root) and run it as a selected user. This step is not required if you're using default configuration, but in my case I have already setup environment for user 'alex' and it is a lot easier to run jobs there.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# gitlab-runner uninstall
+# gitlab-runner install --working-directory=/home/alex --user=alex
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="4"&gt;
+&lt;li&gt;Register gitlab runner with a gitlab server&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# gitlab-runner register
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For the last step the registration information is found in &lt;cite&gt;&amp;lt;gitlab server&amp;gt;/admin/runners&lt;/cite&gt;&lt;/p&gt;
+&lt;img alt="gitlab runner token info" class="align-center" src="images/0005_gitab_ci_runner.png" style="width: 600px;" /&gt;
+&lt;p&gt;This document provides instructions on how to lock shared runners to specific projects -- &lt;a class="reference external" href="https://docs.gitlab.com/ee/ci/runners/"&gt;https://docs.gitlab.com/ee/ci/runners/&lt;/a&gt;&lt;/p&gt;
+</content><category term="gitlab"></category><category term="git. plone"></category><category term="gitlab ci"></category><category term="ci"></category></entry><entry><title>Upgrading from old version of Gitlab CE</title><link href="https://avolkov.github.io/upgrading-from-old-version-of-gitlab-ce.html" rel="alternate"></link><published>2018-02-21T00:00:00-05:00</published><updated>2018-02-21T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2018-02-21:/upgrading-from-old-version-of-gitlab-ce.html</id><summary type="html">&lt;p&gt;I've came across an old instance of Gitlab running on CentOS 6.&lt;/p&gt;
+&lt;p&gt;The old instance version is 8.10.5 installed using omnibus package. The omnibus package contains Postgres database, which needs to be updated from 9.2.x used in 8.10 release to 9.6.x used in …&lt;/p&gt;</summary><content type="html">&lt;p&gt;I've came across an old instance of Gitlab running on CentOS 6.&lt;/p&gt;
 &lt;p&gt;The old instance version is 8.10.5 installed using omnibus package. The omnibus package contains Postgres database, which needs to be updated from 9.2.x used in 8.10 release to 9.6.x used in the current Gitlab 10.4.4.&lt;/p&gt;
-&lt;p&gt;The documentation is not entirely complete, as I be not many people are running Gitlab instance from 2015 that hasn't been updated. There are few mentions of  &lt;cite&gt;gitlab-ctl pg-upgrade&lt;/cite&gt; command but the command is not available in Gitlab 8.10.5, trying to run that will provoke gitlab-ctl to give the following response -- &amp;quot;i don't know that command&amp;quot;&lt;/p&gt;
+&lt;p&gt;The documentation is not entirely complete, as I be not many people are running Gitlab instance from 2015 that hasn't been updated. There are few mentions of gitlab-ctl pg-upgrade command but the command is not available in Gitlab 8.10.5, trying to run that will provoke gitlab-ctl to give the following response -- &amp;quot;i don't know that command&amp;quot;&lt;/p&gt;
 &lt;p&gt;What I eventually figured out, and what needs to be done is to update to version 9.5.10 first -- that would update included postgres to 9.6.x&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# yum install gitlab-ce-9.5.10-ce.0.el6.x86_64.rpm&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# yum install gitlab-ce-9.5.10-ce.0.el6.x86_64.rpm
 &lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Then update gitlab to the latest version.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# yum install gitlab-ce&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# yum install gitlab-ce
 &lt;/pre&gt;&lt;/div&gt;
 &lt;div class="section" id="additional-notes"&gt;
 &lt;h2&gt;Additional notes&lt;/h2&gt;
 &lt;p&gt;If you need to test backups for an old version of Gitlab, you can download and install that version of the package from here -- &lt;a class="reference external" href="https://packages.gitlab.com/app/gitlab/gitlab-ce/search?filter=rpms&amp;amp;q=gitlab-ce-8.10&amp;amp;dist="&gt;https://packages.gitlab.com/app/gitlab/gitlab-ce/search?filter=rpms&amp;amp;q=gitlab-ce-8.10&amp;amp;dist=&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;The package description for the specific package I'm using is here -- &lt;a class="reference external" href="https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/6/gitlab-ce-8.10.5-ce.0.el6.x86_64.rpm"&gt;https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/6/gitlab-ce-8.10.5-ce.0.el6.x86_64.rpm&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;The page also contains installation instructions. Once download and install is finished, run reconfigure script.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# gitlab-ctl reconfigure&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# gitlab-ctl reconfigure
 &lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;The script will create the location &lt;strong&gt;/var/opt/gitlab/backups/&lt;/strong&gt; into which Gitlab backup files should be copied&lt;/p&gt;
+&lt;p&gt;The script will create the location /var/opt/gitlab/backups/ into which Gitlab backup files should be copied&lt;/p&gt;
 &lt;p&gt;Restore gitlab from backup using the following command&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# gitlab-rake gitlab:backup:restore&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# gitlab-rake gitlab:backup:restore
 &lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Then reboot the system. This should get you to the point where it is possible to test Gitlab upgrade process.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class="section" id="gpg-error"&gt;
 &lt;h2&gt;GPG error&lt;/h2&gt;
-&lt;p&gt;Older version of Gitlab ship with unsigned packages and &lt;strong&gt;yum install&lt;/strong&gt; command would refuse to run returning this error message -- &amp;quot;Package is not signed&amp;quot;.&lt;/p&gt;
-&lt;p&gt;A workaround is to set &lt;strong&gt;gpgcheck=0&lt;/strong&gt; in &lt;strong&gt;/etc/yum.repos.d/gitlab_gitlab-ce.repo&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Older version of Gitlab ship with unsigned packages and yum install command would refuse to run returning this error message -- &amp;quot;Package is not signed&amp;quot;.&lt;/p&gt;
+&lt;p&gt;A workaround is to set gpgcheck=0 in /etc/yum.repos.d/gitlab_gitlab-ce.repo&lt;/p&gt;
 &lt;/div&gt;
-</summary><category term="git"></category><category term="gitlab"></category></entry><entry><title>Installing python packages in development mode</title><link href="https://avolkov.github.io/installing-python-packages-in-development-mode.html" rel="alternate"></link><published>2017-01-02T00:00:00-05:00</published><updated>2017-01-02T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2017-01-02:installing-python-packages-in-development-mode.html</id><summary type="html">&lt;p&gt;When working on a python project with several dependencies, sometimes I want to see what's going on in one of the required packages. I don't use IDEs so the preferred method of debugging code inside of package dependencies is to grep for an entry point to that package inside of virtualenv, open the source file, add a debug point and re-run test suite or a script until the code hits the debug point. Figuring out what is the actual problem left as an exercise to the reader.&lt;/p&gt;
+</content><category term="git gitlab"></category></entry><entry><title>Installing python packages in development mode</title><link href="https://avolkov.github.io/installing-python-packages-in-development-mode.html" rel="alternate"></link><published>2017-01-02T00:00:00-05:00</published><updated>2017-01-02T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2017-01-02:/installing-python-packages-in-development-mode.html</id><summary type="html">&lt;p class="first last"&gt;installing package requirements in development mode&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;When working on a python project with several dependencies, sometimes I want to see what's going on in one of the required packages. I don't use IDEs so the preferred method of debugging code inside of package dependencies is to grep for an entry point to that package inside of virtualenv, open the source file, add a debug point and re-run test suite or a script until the code hits the debug point. Figuring out what is the actual problem left as an exercise to the reader.&lt;/p&gt;
 &lt;p&gt;The main issue with the approach above is that when debug console gets activated, it doesn't print out any source code surrounding the debug point, I have to constantly switch between source editor and console hoping that the line printed out in the console matches file lines open in the editor.&lt;/p&gt;
 &lt;p&gt;A better approach is to clone the source package in question and then install it in the current virtual environment with regular install command.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(myproj)$ python setup.py develop
@@ -49,7 +124,8 @@ Install a project in editable mode (i.e. setuptools &amp;quot;develop mode&amp;q
 &lt;p&gt;Pip Reference Guide | Pip Install | VCS Support section -- &lt;a class="reference external" href="https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support"&gt;https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Automating entry function definition lookup with Sublime Text &amp;amp; Anaconda -- &lt;a class="reference external" href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html"&gt;https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html&lt;/a&gt;&lt;/p&gt;
 &lt;/div&gt;
-</summary><category term="python"></category><category term="pip"></category></entry><entry><title>Pyramid web app setup with with Postgres, SQLAlchemy and Alembic.</title><link href="https://avolkov.github.io/pyramid-web-app-setup-with-with-postgres-sqlalchemy-and-alembic.html" rel="alternate"></link><published>2017-01-01T00:00:00-05:00</published><updated>2017-01-01T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2017-01-01:pyramid-web-app-setup-with-with-postgres-sqlalchemy-and-alembic.html</id><summary type="html">&lt;p&gt;This is how I set up a sample web application in development mode using Pyramid 1.7.3, Python 3.x and Postgres 9.x using SQLAlchemy to manage database abstraction and Alembic to manage migrations.&lt;/p&gt;
+</content><category term="python"></category><category term="pip"></category></entry><entry><title>Pyramid web app setup with with Postgres, SQLAlchemy and Alembic.</title><link href="https://avolkov.github.io/pyramid-web-app-setup-with-with-postgres-sqlalchemy-and-alembic.html" rel="alternate"></link><published>2017-01-01T00:00:00-05:00</published><updated>2017-01-01T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2017-01-01:/pyramid-web-app-setup-with-with-postgres-sqlalchemy-and-alembic.html</id><summary type="html">&lt;p class="first last"&gt;Pyramid web app setup with with Postgres, SQLAlchemy and Alembic.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;This is how I set up a sample web application in development mode using Pyramid 1.7.3, Python 3.x and Postgres 9.x using SQLAlchemy to manage database abstraction and Alembic to manage migrations.&lt;/p&gt;
 &lt;div class="section" id="set-up-pyramid-environment"&gt;
 &lt;h2&gt;1. Set up pyramid environment&lt;/h2&gt;
 &lt;p&gt;Create Python 3 virtual environment then install cookiecutter -- a command line utility for creating and managing project templates.&lt;/p&gt;
@@ -261,14 +337,16 @@ one
 &lt;h2&gt;9 Sample Code&lt;/h2&gt;
 &lt;p&gt;Sample code for the project located in -- &lt;a class="reference external" href="https://github.com/avolkov/pyramid-test"&gt;https://github.com/avolkov/pyramid-test&lt;/a&gt;&lt;/p&gt;
 &lt;/div&gt;
-</summary><category term="python"></category><category term="pyramid"></category><category term="postgres"></category><category term="sqlalchemy"></category><category term="alembic"></category></entry><entry><title>Grapical tool for mercurial similar to git blame</title><link href="https://avolkov.github.io/grapical-tool-for-mercurial-similar-to-git-blame.html" rel="alternate"></link><published>2016-12-17T00:00:00-05:00</published><updated>2016-12-17T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-12-17:grapical-tool-for-mercurial-similar-to-git-blame.html</id><summary type="html">&lt;img alt="Repository explorer screenshot" class="align-center" src="https://screenshots.debian.net/screenshots/000/011/445/large.png" style="width: 600px; height: 630px;" /&gt;
+</content><category term="python"></category><category term="pyramid"></category><category term="postgres"></category><category term="sqlalchemy"></category><category term="alembic"></category></entry><entry><title>Grapical tool for mercurial similar to git blame</title><link href="https://avolkov.github.io/grapical-tool-for-mercurial-similar-to-git-blame.html" rel="alternate"></link><published>2016-12-17T00:00:00-05:00</published><updated>2016-12-17T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-12-17:/grapical-tool-for-mercurial-similar-to-git-blame.html</id><summary type="html">&lt;p class="first last"&gt;thg -- A handy GUI tool for looking up historical date&lt;/p&gt;
+</summary><content type="html">&lt;img alt="Repository explorer screenshot" class="align-center" src="https://screenshots.debian.net/screenshots/000/011/445/large.png" style="width: 600px; height: 630px;" /&gt;
 &lt;p&gt;Git has unfortunately-named nevertheless handy tool for exploring historical file data -- &lt;strong&gt;git blame&lt;/strong&gt;. There's an alternative GUI implementation for Mercurial &lt;strong&gt;thg annotate&lt;/strong&gt;, a part of Tortoise Hg suite.&lt;/p&gt;
 &lt;p&gt;Annotate tool works exactly the same as blame, just specify a file name i.e. &lt;strong&gt;thg annotate setup.py&lt;/strong&gt; and a window will pop up with revision list, diff and annotate options.&lt;/p&gt;
 &lt;p&gt;Right-clicking on diff window and selecting &lt;strong&gt;Annotate Options&lt;/strong&gt; brings up possible annotation selection that for some reason aren't selected by default: 'Show Author', 'Show Date' and 'Show Revision'.&lt;/p&gt;
 &lt;p&gt;StackOverflow discussion -- &lt;a class="reference external" href="http://stackoverflow.com/questions/2228188/finding-the-author-of-a-line-of-code-in-mercurial"&gt;http://stackoverflow.com/questions/2228188/finding-the-author-of-a-line-of-code-in-mercurial&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Debian Package (stretch) -- &lt;a class="reference external" href="https://packages.debian.org/stretch/tortoisehg"&gt;https://packages.debian.org/stretch/tortoisehg&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Project Page -- &lt;a class="reference external" href="https://www.mercurial-scm.org/wiki/TortoiseHg"&gt;https://www.mercurial-scm.org/wiki/TortoiseHg&lt;/a&gt;&lt;/p&gt;
-</summary><category term="python"></category><category term="mercurial"></category><category term="hg"></category><category term="tools"></category></entry><entry><title>Testing Python with Mock</title><link href="https://avolkov.github.io/testing-python-with-mock.html" rel="alternate"></link><published>2016-12-17T00:00:00-05:00</published><updated>2016-12-17T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-12-17:testing-python-with-mock.html</id><summary type="html">&lt;div class="section" id="preamble"&gt;
+</content><category term="python"></category><category term="mercurial"></category><category term="hg"></category><category term="tools"></category></entry><entry><title>Testing Python with Mock</title><link href="https://avolkov.github.io/testing-python-with-mock.html" rel="alternate"></link><published>2016-12-17T00:00:00-05:00</published><updated>2016-12-17T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-12-17:/testing-python-with-mock.html</id><summary type="html">&lt;p class="first last"&gt;Testing with mocks and less well know mock methods&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="preamble"&gt;
 &lt;h2&gt;Preamble&lt;/h2&gt;
 &lt;p&gt;In the past few months I've been fortunate enough to write code using TDD. There a brief outline of my experiences using python Mock library help with adding test coverage for the code which is hard to test.&lt;/p&gt;
 &lt;/div&gt;
@@ -356,7 +434,8 @@ one
 &lt;p&gt;&lt;strong&gt;call_count&lt;/strong&gt; -- the number of times mock object was called&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;mock_calls&lt;/strong&gt; -- records all calls to the mock object, its methods, magic methods and return value mocks.&lt;/p&gt;
 &lt;/div&gt;
-</summary><category term="python"></category><category term="testing"></category><category term="mock"></category></entry><entry><title>Nose2 profiler setup</title><link href="https://avolkov.github.io/nose2-profiler-setup.html" rel="alternate"></link><published>2016-11-17T00:00:00-05:00</published><updated>2016-11-17T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-11-17:nose2-profiler-setup.html</id><summary type="html">&lt;p&gt;Nose profiler is one of the plugins that come with nose2 but is turned off by default.&lt;/p&gt;
+</content><category term="python"></category><category term="testing"></category><category term="mock"></category></entry><entry><title>Nose2 profiler setup</title><link href="https://avolkov.github.io/nose2-profiler-setup.html" rel="alternate"></link><published>2016-11-17T00:00:00-05:00</published><updated>2016-11-17T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-11-17:/nose2-profiler-setup.html</id><summary type="html">&lt;p class="first last"&gt;nose2 profiling configuration&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;Nose profiler is one of the plugins that come with nose2 but is turned off by default.&lt;/p&gt;
 &lt;p&gt;To enable profiling add the following configuration to &lt;strong&gt;unittest.cfg&lt;/strong&gt; in the root of your project.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;[unittest]&lt;/span&gt;
 &lt;span class="na"&gt;plugins&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;nose2.plugins.prof&lt;/span&gt;
@@ -368,7 +447,8 @@ one
 &lt;span class="na"&gt;sort&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;cumulative&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;To enable profiler during nose2 run, use the following command parameters &lt;tt class="docutils literal"&gt;nose2 &lt;span class="pre"&gt;-P&lt;/span&gt;&lt;/tt&gt; or more useful, redirect stdout and stderror into a file so profiler output can be analyzed &lt;tt class="docutils literal"&gt;nose2 &lt;span class="pre"&gt;-P&lt;/span&gt; &amp;amp;&amp;gt; perf_report.txt&lt;/tt&gt;&lt;/p&gt;
-</summary><category term="python"></category><category term="testing"></category><category term="nose2"></category><category term="profiling"></category></entry><entry><title>Cricket -- awesome ugly test visualizer</title><link href="https://avolkov.github.io/cricket-awesome-ugly-test-visualizer.html" rel="alternate"></link><published>2016-11-16T00:00:00-05:00</published><updated>2016-11-16T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-11-16:cricket-awesome-ugly-test-visualizer.html</id><summary type="html">&lt;p&gt;I've been writing tests for a while and running them with nose2. One of more labor-intensive interactions with nose2 is typing out paths to individual tests. Cricket -- a part of BeeWare suite solves copying-and-pasting test name problem and provides a nice user interface to summarize results from running test suite.&lt;/p&gt;
+</content><category term="python"></category><category term="testing"></category><category term="nose2"></category><category term="profiling"></category></entry><entry><title>Cricket -- awesome ugly test visualizer</title><link href="https://avolkov.github.io/cricket-awesome-ugly-test-visualizer.html" rel="alternate"></link><published>2016-11-16T00:00:00-05:00</published><updated>2016-11-16T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-11-16:/cricket-awesome-ugly-test-visualizer.html</id><summary type="html">&lt;p class="first last"&gt;Cricket, a handy GUI tool for running tests in python&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;I've been writing tests for a while and running them with nose2. One of more labor-intensive interactions with nose2 is typing out paths to individual tests. Cricket -- a part of BeeWare suite solves copying-and-pasting test name problem and provides a nice user interface to summarize results from running test suite.&lt;/p&gt;
 &lt;div class="section" id="installing-dependencies"&gt;
 &lt;h2&gt;Installing dependencies&lt;/h2&gt;
 &lt;p&gt;Cricket has a couple of system-level dependencies: IDLE editor and IDLE library and TkInter.&lt;/p&gt;
@@ -475,7 +555,8 @@ Exception: idlelib could not be found. Check your operating system instructions 
 &lt;p&gt;Duvet github page -- &lt;a class="reference external" href="https://github.com/pybee/duvet"&gt;https://github.com/pybee/duvet&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;python.__init__ podcast: An interview with Russel Keith McGee -- &lt;a class="reference external" href="http://podcastinit.podbean.com/e/episode-64-beeware-with-russell-keith-magee/"&gt;http://podcastinit.podbean.com/e/episode-64-beeware-with-russell-keith-magee/&lt;/a&gt;&lt;/p&gt;
 &lt;/div&gt;
-</summary><category term="python"></category><category term="testing"></category><category term="cricket"></category></entry><entry><title>Running Jenkins in Docker</title><link href="https://avolkov.github.io/running-jenkins-in-docker.html" rel="alternate"></link><published>2016-10-28T10:19:00-04:00</published><updated>2016-10-28T10:19:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-28:running-jenkins-in-docker.html</id><summary type="html">&lt;div class="section" id="requirements"&gt;
+</content><category term="python"></category><category term="testing"></category><category term="cricket"></category></entry><entry><title>Running Jenkins in Docker</title><link href="https://avolkov.github.io/running-jenkins-in-docker.html" rel="alternate"></link><published>2016-10-28T10:19:00-04:00</published><updated>2016-10-28T10:19:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-28:/running-jenkins-in-docker.html</id><summary type="html">&lt;p class="first last"&gt;setting up jenkins in docker&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="requirements"&gt;
 &lt;h2&gt;Requirements&lt;/h2&gt;
 &lt;p&gt;I went to an FSOSS 2016 &lt;a class="footnote-reference" href="#id7" id="id1"&gt;[1]&lt;/a&gt; conference and I found one talk on Jenkins to be particularly interesting.&lt;/p&gt;
 &lt;p&gt;I wanted to try Jenkins, without configuring Java on my laptop or setting up a VM. Using Jenkins docker container would be the easiest solution for this kind of problem.&lt;/p&gt;
@@ -583,7 +664,10 @@ Exception: idlelib could not be found. Check your operating system instructions 
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;/div&gt;
-</summary><category term="python"></category><category term="jenkins"></category><category term="docker"></category><category term="debian"></category></entry><entry><title>Linting and declaration lookup for Python with Sublime Text 3</title><link href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html" rel="alternate"></link><published>2016-10-23T22:18:00-04:00</published><updated>2016-10-23T22:18:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-23:linting-and-declaration-lookup-for-python-with-sublime-text-3.html</id><summary type="html">&lt;p&gt;Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:&lt;/p&gt;
+</content><category term="python"></category><category term="jenkins"></category><category term="docker"></category><category term="debian"></category></entry><entry><title>Linting and declaration lookup for Python with Sublime Text 3</title><link href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html" rel="alternate"></link><published>2016-10-23T22:18:00-04:00</published><updated>2016-10-23T22:18:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-23:/linting-and-declaration-lookup-for-python-with-sublime-text-3.html</id><summary type="html">&lt;p&gt;Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;linting -- letting the computer keep track of consistent coding style&lt;/li&gt;
+&lt;li&gt;definition lookup -- letting the computer to look …&lt;/li&gt;&lt;/ul&gt;</summary><content type="html">&lt;p&gt;Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:&lt;/p&gt;
 &lt;ul class="simple"&gt;
 &lt;li&gt;linting -- letting the computer keep track of consistent coding style&lt;/li&gt;
 &lt;li&gt;definition lookup -- letting the computer to look up location of definitions&lt;/li&gt;
@@ -703,7 +787,8 @@ Exception: idlelib could not be found. Check your operating system instructions 
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;/div&gt;
-</summary><category term="sublime"></category><category term="python"></category><category term="anaconda"></category><category term="programming"></category><category term="debian"></category></entry><entry><title>Debian Automated Install</title><link href="https://avolkov.github.io/debian-automated-install.html" rel="alternate"></link><published>2016-10-17T21:44:00-04:00</published><updated>2016-10-17T21:44:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-17:debian-automated-install.html</id><summary type="html">&lt;p&gt;A few days ago in my part of the talk at GTALUG &lt;a class="footnote-reference" href="#id7" id="id1"&gt;[1]&lt;/a&gt;  I mentioned using Debian automated install &lt;a class="footnote-reference" href="#id8" id="id2"&gt;[2]&lt;/a&gt; to quickly bring up fully virtualized systems, as one of possible methods of system deployment or testing Ansible scripts.&lt;/p&gt;
+</content><category term="sublime"></category><category term="python"></category><category term="anaconda"></category><category term="programming"></category><category term="debian"></category></entry><entry><title>Debian Automated Install</title><link href="https://avolkov.github.io/debian-automated-install.html" rel="alternate"></link><published>2016-10-17T21:44:00-04:00</published><updated>2016-10-17T21:44:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-17:/debian-automated-install.html</id><summary type="html">&lt;p&gt;A few days ago in my part of the talk at GTALUG &lt;a class="footnote-reference" href="#id7" id="id1"&gt;[1]&lt;/a&gt;  I mentioned using Debian automated install &lt;a class="footnote-reference" href="#id8" id="id2"&gt;[2]&lt;/a&gt; to quickly bring up fully virtualized systems, as one of possible methods of system deployment or testing Ansible scripts.&lt;/p&gt;
+&lt;p&gt;This idea worked so well that I made a youtube video …&lt;/p&gt;</summary><content type="html">&lt;p&gt;A few days ago in my part of the talk at GTALUG &lt;a class="footnote-reference" href="#id7" id="id1"&gt;[1]&lt;/a&gt;  I mentioned using Debian automated install &lt;a class="footnote-reference" href="#id8" id="id2"&gt;[2]&lt;/a&gt; to quickly bring up fully virtualized systems, as one of possible methods of system deployment or testing Ansible scripts.&lt;/p&gt;
 &lt;p&gt;This idea worked so well that I made a youtube video out of it --&lt;/p&gt;
 &lt;div class="youtube youtube-16x9"&gt;&lt;iframe src="https://www.youtube.com/embed/WtIkKrkzPSw" allowfullscreen seamless frameBorder="0"&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;The video is based on the following: preseed file &lt;a class="footnote-reference" href="#id9" id="id3"&gt;[3]&lt;/a&gt; taken from kali linux preseed &lt;a class="footnote-reference" href="#id10" id="id4"&gt;[4]&lt;/a&gt; and gen_iso script &lt;a class="footnote-reference" href="#id11" id="id5"&gt;[5]&lt;/a&gt;, the latter is a distilled version EditIso instructions from Debian Wiki &lt;a class="footnote-reference" href="#id12" id="id6"&gt;[6]&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Example usage -- generating an ISO image based on an existing Debian ISO and a preseed.cfg:&lt;/p&gt;
@@ -766,12 +851,21 @@ Exception: idlelib could not be found. Check your operating system instructions 
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;/div&gt;
-</summary><category term="debian"></category><category term="automation"></category><category term="preseeding"></category></entry><entry><title>Hello world</title><link href="https://avolkov.github.io/hello.html" rel="alternate"></link><published>2016-09-29T22:01:00-04:00</published><updated>2016-09-29T22:01:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-09-29:hello.html</id><summary type="html">&lt;p&gt;A one way of learning restructured test is to start writing all of the things
+</content><category term="debian"></category><category term="automation"></category><category term="preseeding"></category></entry><entry><title>Hello world</title><link href="https://avolkov.github.io/hello.html" rel="alternate"></link><published>2016-09-29T22:01:00-04:00</published><updated>2016-09-29T22:01:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-09-29:/hello.html</id><summary type="html">&lt;p&gt;A one way of learning restructured test is to start writing all of the things
 down using rst. &lt;a class="reference external" href="http://docs.getpelican.com/en/3.3.0/getting_started.html"&gt;Pelican&lt;/a&gt;
 is a rather nice static site generator.&lt;/p&gt;
 &lt;p&gt;A short tutorial on how to set up a blog with pelican, rst and github pages can be found
 on &lt;a class="reference external" href="http://www.circuidipity.com/pelican.html"&gt;Circuidipity&lt;/a&gt;.&lt;/p&gt;
-</summary><category term="pelican"></category><category term="web"></category><category term="rst"></category><category term="github"></category><category term="first"></category></entry><entry><title>Thursday's Raspberry Pi meetup</title><link href="https://avolkov.github.io/thursdays-raspberry-pi-meetup.html" rel="alternate"></link><published>2016-01-17T22:01:00-05:00</published><updated>2016-01-17T22:01:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-01-17:thursdays-raspberry-pi-meetup.html</id><summary type="html">&lt;p&gt;I went to &lt;a class="reference external" href="http://www.meetup.com/Raspberry-Pi/"&gt;Raspberry Pi meetup&lt;/a&gt; on Thursday, January 14, and would like to share some links about the presentation I gave and things I brought with me.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;A one way of learning restructured test is to start writing all of the things
+down using rst. &lt;a class="reference external" href="http://docs.getpelican.com/en/3.3.0/getting_started.html"&gt;Pelican&lt;/a&gt;
+is a rather nice static site generator.&lt;/p&gt;
+&lt;p&gt;A short tutorial on how to set up a blog with pelican, rst and github pages can be found
+on &lt;a class="reference external" href="http://www.circuidipity.com/pelican.html"&gt;Circuidipity&lt;/a&gt;.&lt;/p&gt;
+</content><category term="pelican"></category><category term="web"></category><category term="rst"></category><category term="github"></category><category term="first"></category></entry><entry><title>Thursday's Raspberry Pi meetup</title><link href="https://avolkov.github.io/thursdays-raspberry-pi-meetup.html" rel="alternate"></link><published>2016-01-17T22:01:00-05:00</published><updated>2016-01-17T22:01:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-01-17:/thursdays-raspberry-pi-meetup.html</id><summary type="html">&lt;p&gt;I went to &lt;a class="reference external" href="http://www.meetup.com/Raspberry-Pi/"&gt;Raspberry Pi meetup&lt;/a&gt; on Thursday, January 14, and would like to share some links about the presentation I gave and things I brought with me.&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://github.com/avolkov/rpi-opencv"&gt;Instructions on setting up OpenCV on Raspbian Jessie&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://github.com/avolkov/my-first-automatic-door-man"&gt;My fork of Thiago's automatic doorman that works with PiCamera&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://picamera.readthedocs.org/en/release-1.10/"&gt;Python library and documentation …&lt;/a&gt;&lt;/li&gt;&lt;/ol&gt;</summary><content type="html">&lt;p&gt;I went to &lt;a class="reference external" href="http://www.meetup.com/Raspberry-Pi/"&gt;Raspberry Pi meetup&lt;/a&gt; on Thursday, January 14, and would like to share some links about the presentation I gave and things I brought with me.&lt;/p&gt;
 &lt;ol class="arabic simple"&gt;
 &lt;li&gt;&lt;a class="reference external" href="https://github.com/avolkov/rpi-opencv"&gt;Instructions on setting up OpenCV on Raspbian Jessie&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a class="reference external" href="https://github.com/avolkov/my-first-automatic-door-man"&gt;My fork of Thiago's automatic doorman that works with PiCamera&lt;/a&gt;&lt;/li&gt;
@@ -782,7 +876,8 @@ on &lt;a class="reference external" href="http://www.circuidipity.com/pelican.ht
 &lt;li&gt;&lt;a class="reference external" href="https://www.tiagoespinha.net/2014/05/project-how-to-easily-monitor-your-plants-soil-humidity/"&gt;A more complete soil hygrometer tutorial&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;One important thing to be aware about soil moisture sensor, is to not apply voltage to the soil probe all the time or take too many measurements at once as leads on the probe will quickly corrode. Also the probe has analog data output, and it looks like it would work better with Adruino board than Raspberry Pi as the latter doesn't have analog input pins.&lt;/p&gt;
-</summary><category term="raspberrypi"></category><category term="opencv"></category><category term="gardening"></category></entry><entry><title>Fun of premature optimization</title><link href="https://avolkov.github.io/fun-of-premature-optimization.html" rel="alternate"></link><published>2016-01-09T00:00:00-05:00</published><updated>2016-01-09T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-01-09:fun-of-premature-optimization.html</id><summary type="html">&lt;p&gt;Last week I deployed a redesigned website that included a new search feature, looking at the server logs I've noticed that users of the site use search. A lot.&lt;/p&gt;
+</content><category term="raspberrypi"></category><category term="opencv"></category><category term="gardening"></category></entry><entry><title>Fun of premature optimization</title><link href="https://avolkov.github.io/fun-of-premature-optimization.html" rel="alternate"></link><published>2016-01-09T00:00:00-05:00</published><updated>2016-01-09T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-01-09:/fun-of-premature-optimization.html</id><summary type="html">&lt;p&gt;Last week I deployed a redesigned website that included a new search feature, looking at the server logs I've noticed that users of the site use search. A lot.&lt;/p&gt;
+&lt;p&gt;I wanted to know more about what kind of questions end-users were asking, so I wrote a short program to parse …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Last week I deployed a redesigned website that included a new search feature, looking at the server logs I've noticed that users of the site use search. A lot.&lt;/p&gt;
 &lt;p&gt;I wanted to know more about what kind of questions end-users were asking, so I wrote a short program to parse the logs, extracting query strings formed with HTTP GET variable &lt;cite&gt;q=query+text&lt;/cite&gt;. It was fairly easy do, especially with apache_log_parser &lt;a class="reference external" href="https://pypi.python.org/pypi/apache-log-parser/"&gt;pypi&lt;/a&gt;, &lt;a class="reference external" href="https://github.com/rory/apache-log-parser"&gt;github&lt;/a&gt;, that works with any web server with &lt;a class="reference external" href="https://httpd.apache.org/docs/1.3/logs.html#common"&gt;common log format&lt;/a&gt; support. Nginx is compatible, default access log line can be parsed with this -- &lt;em&gt;%h %l %u %t &amp;quot;%r&amp;quot; %&amp;gt;s %O &amp;quot;%{Referer}i&amp;quot; &amp;quot;%{User-Agent}i'&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;The program returns an array records, each containing query string, remote IP address and a time stamp, then I toyed with the idea of measuring its performance, so I tested several possibilities with the most crude tool ever -- &lt;a class="reference external" href="http://ss64.com/bash/time.html"&gt;time command&lt;/a&gt;. I used &lt;em&gt;real&lt;/em&gt; time value.&lt;/p&gt;
 &lt;p&gt;The setup: this program is implemented in Python 3, it was run on Intel Celeron 2955U, the input log file size is 15MB. All the code changes were cumulative -- the performance was measured with all the changes up to that point.&lt;/p&gt;
@@ -982,7 +1077,8 @@ The code will look much cleaner, generators are a little slower than in-memory o
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;I can think of two things after doing this exercise: first, &lt;a class="reference external" href="http://www.joelonsoftware.com/articles/LeakyAbstractions.html"&gt;the law of leaky abstractions&lt;/a&gt; is still with us even if the abstracted code is relatively straightforward and works well, there are still implementation details to be aware of; second, fixing up and making code better and more pythonic helps me to think about program flow differently with much greater potential benefits in the long run, even if in the short run performance of a program may decrease.&lt;/p&gt;
-</summary><category term="python"></category><category term="apache logs"></category><category term="regular expressions"></category><category term="performance"></category></entry><entry><title>My awesome 15K MEC Run</title><link href="https://avolkov.github.io/my-awesome-15k-mec-run.html" rel="alternate"></link><published>2015-12-06T22:44:33-05:00</published><updated>2015-12-06T22:44:33-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2015-12-06:my-awesome-15k-mec-run.html</id><summary type="html">&lt;p&gt;These are my experiences from MEC Race Seven that happened on October 20, 2015. I posted this a while ago on EYTR page, now I finally got a couple of photos of it.&lt;/p&gt;
+</content><category term="python"></category><category term="apache logs"></category><category term="regular expressions"></category><category term="performance"></category></entry><entry><title>My awesome 15K MEC Run</title><link href="https://avolkov.github.io/my-awesome-15k-mec-run.html" rel="alternate"></link><published>2015-12-06T22:44:33-05:00</published><updated>2015-12-06T22:44:33-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2015-12-06:/my-awesome-15k-mec-run.html</id><summary type="html">&lt;p&gt;These are my experiences from MEC Race Seven that happened on October 20, 2015. I posted this a while ago on EYTR page, now I finally got a couple of photos of it.&lt;/p&gt;
+&lt;p&gt;I'm still not sure how that's possible but I ran MEC 15K in 1:09:42.0 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;These are my experiences from MEC Race Seven that happened on October 20, 2015. I posted this a while ago on EYTR page, now I finally got a couple of photos of it.&lt;/p&gt;
 &lt;p&gt;I'm still not sure how that's possible but I ran MEC 15K in 1:09:42.0. That brought me to #11 finisher.&lt;/p&gt;
 &lt;p&gt;My watch shows the average pace of 4.39 Min/Km. Which is not the kind of numbers I'm used to or expect.&lt;/p&gt;
 &lt;p&gt;I started the run at a pace that was way too fast breathing like a steam locomotive for the first 2K. Then I followed a runner who was keeping a pace of 4:20-4:30 Min/Km and I managed to run along until 4.5K mark. Then I started falling behind, but I didn't fall behind for more than a couple hundred meters.&lt;/p&gt;
@@ -992,7 +1088,9 @@ The code will look much cleaner, generators are a little slower than in-memory o
 &lt;p&gt;The remainder of the race became a mental battle that turned from &lt;em&gt;not falling apart before 10K&lt;/em&gt; to &lt;em&gt;not falling apart at the next K&lt;/em&gt; and finally &lt;em&gt;not falling apart at the last K&lt;/em&gt;. I'm glad to report I have managed.&lt;/p&gt;
 &lt;p&gt;I've been running around 25-40K in the last three or four weeks but never more than 15K at a time, I also would sometimes run during our regular runs with Becca or Navin at a pace 4:30-4:40 Min/Km but no more than 2 or 3KM at a time, apparently both of those things really helped.&lt;/p&gt;
 &lt;p&gt;Thanks guys and gals!&lt;/p&gt;
-</summary><category term="running"></category></entry><entry><title>Raspberry Pi Wireless config</title><link href="https://avolkov.github.io/raspberry-pi-wireless-config.html" rel="alternate"></link><published>2015-12-06T00:57:30-05:00</published><updated>2015-12-06T00:57:30-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2015-12-06:raspberry-pi-wireless-config.html</id><summary type="html">&lt;p&gt;Here's working wireless configuration I use to connect my Raspberry Pis with USB wifi dongles to my home network.&lt;/p&gt;
+</content><category term="running"></category></entry><entry><title>Raspberry Pi Wireless config</title><link href="https://avolkov.github.io/raspberry-pi-wireless-config.html" rel="alternate"></link><published>2015-12-06T00:57:30-05:00</published><updated>2015-12-06T00:57:30-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2015-12-06:/raspberry-pi-wireless-config.html</id><summary type="html">&lt;p&gt;Here's working wireless configuration I use to connect my Raspberry Pis with USB wifi dongles to my home network.&lt;/p&gt;
+&lt;p&gt;I've been using Realtek RTL8188CUS and Ralink RT5370 based devices rated for 150Mbps.&lt;/p&gt;
+&lt;p&gt;Dongles based on Ralink chip have been working flawlessly, but I have experienced two issues with the Realtek-based …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Here's working wireless configuration I use to connect my Raspberry Pis with USB wifi dongles to my home network.&lt;/p&gt;
 &lt;p&gt;I've been using Realtek RTL8188CUS and Ralink RT5370 based devices rated for 150Mbps.&lt;/p&gt;
 &lt;p&gt;Dongles based on Ralink chip have been working flawlessly, but I have experienced two issues with the Realtek-based device. The adapter just doesn't work in AP mode, and if there's no network activity it will drop in power saving mode that can only be resumed packets are sent from the host.&lt;/p&gt;
 &lt;p&gt;In practical terms the host becomes unavailable for anyone who attempts to initiate a remote connection, however, this can be mitigated by creating a cron job that pings the router every minute.&lt;/p&gt;
@@ -1016,4 +1114,4 @@ iface default inet dhcp
         &lt;span class="nv"&gt;auth_alg&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;OPEN
 &lt;span class="o"&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
-</summary><category term="raspberrypi"></category><category term="networking"></category><category term="wireless"></category><category term="realtek"></category><category term="ralink"></category><category term="usb"></category></entry></feed>
+</content><category term="raspberrypi"></category><category term="networking"></category><category term="wireless"></category><category term="realtek"></category><category term="ralink"></category><category term="usb"></category></entry></feed>

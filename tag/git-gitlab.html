@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
         <meta charset="utf-8" />
-        <title>disparate notes - ralink</title>
+        <title>disparate notes - git gitlab</title>
         <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
         <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
 
@@ -26,41 +26,44 @@
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="https://avolkov.github.io/raspberry-pi-wireless-config.html">Raspberry Pi Wireless config</a></h1>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/upgrading-from-old-version-of-gitlab-ce.html">Upgrading from old version of Gitlab CE</a></h1>
 <footer class="post-info">
-        <abbr class="published" title="2015-12-06T00:57:30-05:00">
-                Published: Sun 06 December 2015
+        <abbr class="published" title="2018-02-21T00:00:00-05:00">
+                Published: Wed 21 February 2018
         </abbr>
 
         <address class="vcard author">
                 By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
         </address>
 <p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
-<p>tags: <a href="https://avolkov.github.io/tag/raspberrypi.html">raspberrypi</a> <a href="https://avolkov.github.io/tag/networking.html">networking</a> <a href="https://avolkov.github.io/tag/wireless.html">wireless</a> <a href="https://avolkov.github.io/tag/realtek.html">realtek</a> <a href="https://avolkov.github.io/tag/ralink.html">ralink</a> <a href="https://avolkov.github.io/tag/usb.html">usb</a> </p>
-</footer><!-- /.post-info --><p>Here's working wireless configuration I use to connect my Raspberry Pis with USB wifi dongles to my home network.</p>
-<p>I've been using Realtek RTL8188CUS and Ralink RT5370 based devices rated for 150Mbps.</p>
-<p>Dongles based on Ralink chip have been working flawlessly, but I have experienced two issues with the Realtek-based device. The adapter just doesn't work in AP mode, and if there's no network activity it will drop in power saving mode that can only be resumed packets are sent from the host.</p>
-<p>In practical terms the host becomes unavailable for anyone who attempts to initiate a remote connection, however, this can be mitigated by creating a cron job that pings the router every minute.</p>
-<p>This configuration that doesn't rely on GUI or NetworkManager starting up, assumes that <strong>wpasupplicant</strong> package is installed and wireless adapter is recognized by the system as <strong>wlan0</strong>.</p>
-<p>Add the following to <strong>/etc/network/interfaces</strong></p>
-<div class="highlight"><pre><span></span>allow-hotplug wlan0
-iface wlan0 inet manual
-wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf
-iface default inet dhcp
+<p>tags: <a href="https://avolkov.github.io/tag/git-gitlab.html">git gitlab</a> </p>
+</footer><!-- /.post-info --><p>I've came across an old instance of Gitlab running on CentOS 6.</p>
+<p>The old instance version is 8.10.5 installed using omnibus package. The omnibus package contains Postgres database, which needs to be updated from 9.2.x used in 8.10 release to 9.6.x used in the current Gitlab 10.4.4.</p>
+<p>The documentation is not entirely complete, as I be not many people are running Gitlab instance from 2015 that hasn't been updated. There are few mentions of gitlab-ctl pg-upgrade command but the command is not available in Gitlab 8.10.5, trying to run that will provoke gitlab-ctl to give the following response -- &quot;i don't know that command&quot;</p>
+<p>What I eventually figured out, and what needs to be done is to update to version 9.5.10 first -- that would update included postgres to 9.6.x</p>
+<div class="highlight"><pre><span></span># yum install gitlab-ce-9.5.10-ce.0.el6.x86_64.rpm
 </pre></div>
-<p>Edit <strong>/etc/wpa_supplicant/wpa_supplicant.conf</strong> as such.</p>
-<div class="highlight"><pre><span></span><span class="nv">ctrl_interface</span><span class="o">=</span><span class="nv">DIR</span><span class="o">=</span>/var/run/wpa_supplicant <span class="nv">GROUP</span><span class="o">=</span>netdev
-<span class="nv">update_config</span><span class="o">=</span><span class="m">1</span>
-
-<span class="nv">network</span><span class="o">={</span>
-        <span class="nv">ssid</span><span class="o">=</span><span class="s2">&quot;AP Name&quot;</span>
-        <span class="nv">psk</span><span class="o">=</span><span class="s2">&quot;AP Secret&quot;</span>
-        <span class="nv">proto</span><span class="o">=</span>RSN
-        <span class="nv">key_mgmt</span><span class="o">=</span>WPA-PSK
-        <span class="nv">pairwise</span><span class="o">=</span>CCMP
-        <span class="nv">auth_alg</span><span class="o">=</span>OPEN
-<span class="o">}</span>
+<p>Then update gitlab to the latest version.</p>
+<div class="highlight"><pre><span></span># yum install gitlab-ce
 </pre></div>
+<div class="section" id="additional-notes">
+<h2>Additional notes</h2>
+<p>If you need to test backups for an old version of Gitlab, you can download and install that version of the package from here -- <a class="reference external" href="https://packages.gitlab.com/app/gitlab/gitlab-ce/search?filter=rpms&amp;q=gitlab-ce-8.10&amp;dist=">https://packages.gitlab.com/app/gitlab/gitlab-ce/search?filter=rpms&amp;q=gitlab-ce-8.10&amp;dist=</a></p>
+<p>The package description for the specific package I'm using is here -- <a class="reference external" href="https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/6/gitlab-ce-8.10.5-ce.0.el6.x86_64.rpm">https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/6/gitlab-ce-8.10.5-ce.0.el6.x86_64.rpm</a></p>
+<p>The page also contains installation instructions. Once download and install is finished, run reconfigure script.</p>
+<div class="highlight"><pre><span></span># gitlab-ctl reconfigure
+</pre></div>
+<p>The script will create the location /var/opt/gitlab/backups/ into which Gitlab backup files should be copied</p>
+<p>Restore gitlab from backup using the following command</p>
+<div class="highlight"><pre><span></span># gitlab-rake gitlab:backup:restore
+</pre></div>
+<p>Then reboot the system. This should get you to the point where it is possible to test Gitlab upgrade process.</p>
+</div>
+<div class="section" id="gpg-error">
+<h2>GPG error</h2>
+<p>Older version of Gitlab ship with unsigned packages and yum install command would refuse to run returning this error message -- &quot;Package is not signed&quot;.</p>
+<p>A workaround is to set gpgcheck=0 in /etc/yum.repos.d/gitlab_gitlab-ce.repo</p>
+</div>
                 </article>
             </aside><!-- /#featured -->
         <section id="extras" class="body">

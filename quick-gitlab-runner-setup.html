@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
         <meta charset="utf-8" />
-        <title>disparate notes - gitlab</title>
+        <title>Quick gitlab runner setup</title>
         <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
         <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
 
@@ -15,7 +15,7 @@
         <header id="banner" class="body">
                 <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
                 <nav><ul>
-                    <li><a href="https://avolkov.github.io/category/ci.html">ci,</a></li>
+                    <li class="active"><a href="https://avolkov.github.io/category/ci.html">ci,</a></li>
                     <li><a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a></li>
                     <li><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
                     <li><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
@@ -23,10 +23,15 @@
                     <li><a href="https://avolkov.github.io/category/web-application-development.html">web application development</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="https://avolkov.github.io/quick-gitlab-runner-setup.html" rel="bookmark"
+           title="Permalink to Quick gitlab runner setup">Quick gitlab runner setup</a></h1>
+    </header>
 
-            <aside id="featured" class="body">
-                <article>
-                    <h1 class="entry-title"><a href="https://avolkov.github.io/quick-gitlab-runner-setup.html">Quick gitlab runner setup</a></h1>
+    <div class="entry-content">
 <footer class="post-info">
         <abbr class="published" title="2018-05-01T00:00:00-04:00">
                 Published: Tue 01 May 2018
@@ -37,7 +42,7 @@
         </address>
 <p>In <a href="https://avolkov.github.io/category/ci.html">ci,</a>.</p>
 <p>tags: <a href="https://avolkov.github.io/tag/gitlab.html">gitlab</a> <a href="https://avolkov.github.io/tag/git-plone.html">git. plone</a> <a href="https://avolkov.github.io/tag/gitlab-ci.html">gitlab ci</a> <a href="https://avolkov.github.io/tag/ci.html">ci</a> </p>
-</footer><!-- /.post-info --><p>Gitlab runner is a continuous integration tool that I've found it to be a lot easier than Jenkins to wrap my head around when it comes to deploying source code to demo machines.</p>
+</footer><!-- /.post-info -->      <p>Gitlab runner is a continuous integration tool that I've found it to be a lot easier than Jenkins to wrap my head around when it comes to deploying source code to demo machines.</p>
 <p>In this scenario gitlab runner it pulls per-project source code to a runner machine then executes any of the commands specified in <cite>.gitlab-ci.yml</cite> from source code root directory.</p>
 <p>Here's a sample configuration of updating source code on buildout-based Plone 5 project:</p>
 <div class="highlight"><pre><span></span>stages:
@@ -109,8 +114,11 @@
 <p>For the last step the registration information is found in <cite>&lt;gitlab server&gt;/admin/runners</cite></p>
 <img alt="gitlab runner token info" class="align-center" src="images/0005_gitab_ci_runner.png" style="width: 600px;" />
 <p>This document provides instructions on how to lock shared runners to specific projects -- <a class="reference external" href="https://docs.gitlab.com/ee/ci/runners/">https://docs.gitlab.com/ee/ci/runners/</a></p>
-                </article>
-            </aside><!-- /#featured -->
+
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
         <section id="extras" class="body">
                 <div class="social">
                         <h2>social</h2>

@@ -15,6 +15,7 @@
         <header id="banner" class="body">
                 <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
                 <nav><ul>
+                    <li><a href="https://avolkov.github.io/category/ci.html">ci,</a></li>
                     <li><a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a></li>
                     <li class="active"><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
                     <li><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
@@ -35,33 +36,33 @@
                 By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
         </address>
 <p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
-<p>tags: <a href="https://avolkov.github.io/tag/git.html">git</a> <a href="https://avolkov.github.io/tag/gitlab.html">gitlab</a> </p>
+<p>tags: <a href="https://avolkov.github.io/tag/git-gitlab.html">git gitlab</a> </p>
 </footer><!-- /.post-info --><p>I've came across an old instance of Gitlab running on CentOS 6.</p>
 <p>The old instance version is 8.10.5 installed using omnibus package. The omnibus package contains Postgres database, which needs to be updated from 9.2.x used in 8.10 release to 9.6.x used in the current Gitlab 10.4.4.</p>
-<p>The documentation is not entirely complete, as I be not many people are running Gitlab instance from 2015 that hasn't been updated. There are few mentions of  <cite>gitlab-ctl pg-upgrade</cite> command but the command is not available in Gitlab 8.10.5, trying to run that will provoke gitlab-ctl to give the following response -- &quot;i don't know that command&quot;</p>
+<p>The documentation is not entirely complete, as I be not many people are running Gitlab instance from 2015 that hasn't been updated. There are few mentions of gitlab-ctl pg-upgrade command but the command is not available in Gitlab 8.10.5, trying to run that will provoke gitlab-ctl to give the following response -- &quot;i don't know that command&quot;</p>
 <p>What I eventually figured out, and what needs to be done is to update to version 9.5.10 first -- that would update included postgres to 9.6.x</p>
-<div class="highlight"><pre><span></span><span class="c1"># yum install gitlab-ce-9.5.10-ce.0.el6.x86_64.rpm</span>
+<div class="highlight"><pre><span></span># yum install gitlab-ce-9.5.10-ce.0.el6.x86_64.rpm
 </pre></div>
 <p>Then update gitlab to the latest version.</p>
-<div class="highlight"><pre><span></span><span class="c1"># yum install gitlab-ce</span>
+<div class="highlight"><pre><span></span># yum install gitlab-ce
 </pre></div>
 <div class="section" id="additional-notes">
 <h2>Additional notes</h2>
 <p>If you need to test backups for an old version of Gitlab, you can download and install that version of the package from here -- <a class="reference external" href="https://packages.gitlab.com/app/gitlab/gitlab-ce/search?filter=rpms&amp;q=gitlab-ce-8.10&amp;dist=">https://packages.gitlab.com/app/gitlab/gitlab-ce/search?filter=rpms&amp;q=gitlab-ce-8.10&amp;dist=</a></p>
 <p>The package description for the specific package I'm using is here -- <a class="reference external" href="https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/6/gitlab-ce-8.10.5-ce.0.el6.x86_64.rpm">https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/6/gitlab-ce-8.10.5-ce.0.el6.x86_64.rpm</a></p>
 <p>The page also contains installation instructions. Once download and install is finished, run reconfigure script.</p>
-<div class="highlight"><pre><span></span><span class="c1"># gitlab-ctl reconfigure</span>
+<div class="highlight"><pre><span></span># gitlab-ctl reconfigure
 </pre></div>
-<p>The script will create the location <strong>/var/opt/gitlab/backups/</strong> into which Gitlab backup files should be copied</p>
+<p>The script will create the location /var/opt/gitlab/backups/ into which Gitlab backup files should be copied</p>
 <p>Restore gitlab from backup using the following command</p>
-<div class="highlight"><pre><span></span><span class="c1"># gitlab-rake gitlab:backup:restore</span>
+<div class="highlight"><pre><span></span># gitlab-rake gitlab:backup:restore
 </pre></div>
 <p>Then reboot the system. This should get you to the point where it is possible to test Gitlab upgrade process.</p>
 </div>
 <div class="section" id="gpg-error">
 <h2>GPG error</h2>
-<p>Older version of Gitlab ship with unsigned packages and <strong>yum install</strong> command would refuse to run returning this error message -- &quot;Package is not signed&quot;.</p>
-<p>A workaround is to set <strong>gpgcheck=0</strong> in <strong>/etc/yum.repos.d/gitlab_gitlab-ce.repo</strong></p>
+<p>Older version of Gitlab ship with unsigned packages and yum install command would refuse to run returning this error message -- &quot;Package is not signed&quot;.</p>
+<p>A workaround is to set gpgcheck=0 in /etc/yum.repos.d/gitlab_gitlab-ce.repo</p>
 </div>
                 </article>
             </aside><!-- /#featured -->
@@ -90,7 +91,7 @@
 </footer><!-- /.post-info -->                <p>Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:</p>
 <ul class="simple">
 <li>linting -- letting the computer keep track of consistent coding style</li>
-<li>definition lookup -- letting the computer to look ...</li></ul>
+<li>definition lookup -- letting the computer to look …</li></ul>
                 <a class="readmore" href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
@@ -113,7 +114,7 @@
 <p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
 <p>tags: <a href="https://avolkov.github.io/tag/debian.html">debian</a> <a href="https://avolkov.github.io/tag/automation.html">automation</a> <a href="https://avolkov.github.io/tag/preseeding.html">preseeding</a> </p>
 </footer><!-- /.post-info -->                <p>A few days ago in my part of the talk at GTALUG <a class="footnote-reference" href="#id7" id="id1">[1]</a>  I mentioned using Debian automated install <a class="footnote-reference" href="#id8" id="id2">[2]</a> to quickly bring up fully virtualized systems, as one of possible methods of system deployment or testing Ansible scripts.</p>
-<p>This idea worked so well that I made a youtube video ...</p>
+<p>This idea worked so well that I made a youtube video …</p>
                 <a class="readmore" href="https://avolkov.github.io/debian-automated-install.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
@@ -166,7 +167,7 @@ on <a class="reference external" href="http://www.circuidipity.com/pelican.html"
 <ol class="arabic simple">
 <li><a class="reference external" href="https://github.com/avolkov/rpi-opencv">Instructions on setting up OpenCV on Raspbian Jessie</a></li>
 <li><a class="reference external" href="https://github.com/avolkov/my-first-automatic-door-man">My fork of Thiago's automatic doorman that works with PiCamera</a></li>
-<li><a class="reference external" href="https://picamera.readthedocs.org/en/release-1.10/">Python library and ...</a></li></ol>
+<li><a class="reference external" href="https://picamera.readthedocs.org/en/release-1.10/">Python library and documentation …</a></li></ol>
                 <a class="readmore" href="https://avolkov.github.io/thursdays-raspberry-pi-meetup.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
@@ -189,7 +190,7 @@ on <a class="reference external" href="http://www.circuidipity.com/pelican.html"
 <p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
 <p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/apache-logs.html">apache logs</a> <a href="https://avolkov.github.io/tag/regular-expressions.html">regular expressions</a> <a href="https://avolkov.github.io/tag/performance.html">performance</a> </p>
 </footer><!-- /.post-info -->                <p>Last week I deployed a redesigned website that included a new search feature, looking at the server logs I've noticed that users of the site use search. A lot.</p>
-<p>I wanted to know more about what kind of questions end-users were asking, so I wrote a short program to ...</p>
+<p>I wanted to know more about what kind of questions end-users were asking, so I wrote a short program to parse …</p>
                 <a class="readmore" href="https://avolkov.github.io/fun-of-premature-optimization.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
@@ -212,7 +213,7 @@ on <a class="reference external" href="http://www.circuidipity.com/pelican.html"
 <p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
 <p>tags: <a href="https://avolkov.github.io/tag/running.html">running</a> </p>
 </footer><!-- /.post-info -->                <p>These are my experiences from MEC Race Seven that happened on October 20, 2015. I posted this a while ago on EYTR page, now I finally got a couple of photos of it.</p>
-<p>I'm still not sure how that's possible but I ran MEC 15K in 1:09 ...</p>
+<p>I'm still not sure how that's possible but I ran MEC 15K in 1:09:42.0 …</p>
                 <a class="readmore" href="https://avolkov.github.io/my-awesome-15k-mec-run.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
@@ -236,7 +237,7 @@ on <a class="reference external" href="http://www.circuidipity.com/pelican.html"
 <p>tags: <a href="https://avolkov.github.io/tag/raspberrypi.html">raspberrypi</a> <a href="https://avolkov.github.io/tag/networking.html">networking</a> <a href="https://avolkov.github.io/tag/wireless.html">wireless</a> <a href="https://avolkov.github.io/tag/realtek.html">realtek</a> <a href="https://avolkov.github.io/tag/ralink.html">ralink</a> <a href="https://avolkov.github.io/tag/usb.html">usb</a> </p>
 </footer><!-- /.post-info -->                <p>Here's working wireless configuration I use to connect my Raspberry Pis with USB wifi dongles to my home network.</p>
 <p>I've been using Realtek RTL8188CUS and Ralink RT5370 based devices rated for 150Mbps.</p>
-<p>Dongles based on Ralink chip have been working flawlessly, but I have experienced two issues with ...</p>
+<p>Dongles based on Ralink chip have been working flawlessly, but I have experienced two issues with the Realtek-based …</p>
                 <a class="readmore" href="https://avolkov.github.io/raspberry-pi-wireless-config.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
@@ -263,14 +264,13 @@ on <a class="reference external" href="http://www.circuidipity.com/pelican.html"
         </footer><!-- /#contentinfo -->
 
     <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-87694404-1']);
-    _gaq.push(['_trackPageview']);
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = 'https://ssl.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-87694404-1', 'auto');
+    ga('send', 'pageview');
     </script>
 </body>
 </html>
