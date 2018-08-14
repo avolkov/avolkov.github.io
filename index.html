@@ -18,6 +18,7 @@
                     <li><a href="https://avolkov.github.io/category/ci.html">ci,</a></li>
                     <li><a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a></li>
                     <li><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
+                    <li><a href="https://avolkov.github.io/category/programming.html">programming</a></li>
                     <li><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
                     <li><a href="https://avolkov.github.io/category/tools.html">tools</a></li>
                     <li><a href="https://avolkov.github.io/category/web-application-development.html">web application development</a></li>
@@ -26,7 +27,58 @@
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="https://avolkov.github.io/quick-gitlab-runner-setup.html">Quick gitlab runner setup</a></h1>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/simple-threading-in-python-3.html">Simple threading in Python 3</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2018-08-13T00:00:00-04:00">
+                Published: Mon 13 August 2018
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/programming.html">programming</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/multithreading.html">multithreading</a> </p>
+</footer><!-- /.post-info --><p>I've been working in Python 3 on an an embarrassingly parallel task of parsing and importing data into Postgres. Once I've done single-threaded implementation I looked around for parallelizing the program and after a few tries I managed to get everything running in parallel.</p>
+<p>This is a quick note on how to get a thread pool working in Python 3.6</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+
+<span class="k">def</span> <span class="nf">data_source</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Fetch data to be processed in parallel&quot;&quot;&quot;</span>
+    <span class="c1"># Implement fetching data</span>
+    <span class="k">yield</span> <span class="n">item</span>
+
+<span class="k">def</span> <span class="nf">process_data</span><span class="p">(</span><span class="n">input_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Process data without modifying input&quot;&quot;&quot;</span>
+    <span class="c1"># Implement saving data to postgres</span>
+
+
+<span class="n">MAX_THREADS</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">pool</span> <span class="o">=</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">MAX_THREADS</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data_source</span><span class="p">():</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">process_data</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</pre></div>
+<p>In the code block above, <strong>data_source</strong> function is an iterator that generates one <strong>value</strong> at a time. <strong>pool.submit</strong> calls <strong>process_data</strong> with <strong>value</strong> as a parameter of <strong>process_data</strong> in parallel until thread pool limited in size by <strong>MAX_THREADS</strong> is exhausted, then the program waits for a thread to become available and fetches the next value, until <strong>data_sources</strong> generator is exhausted.</p>
+<p>In this example <strong>pool.submit</strong> passes single parameter <strong>value</strong> to <strong>process_data</strong>, but <strong>pool.submit</strong> can pass any number of parameters required for the callee function i.e.</p>
+<div class="highlight"><pre><span></span><span class="n">pool_submit</span><span class="p">(</span><span class="n">callee_func</span><span class="p">,</span> <span class="n">callee_param_1</span><span class="p">,</span> <span class="n">callee_param_n</span><span class="p">,</span> <span class="o">...</span> <span class="n">callee_param_n</span><span class="p">)</span>
+</pre></div>
+<p>I really like this threading implementation because it's really simple, there's no need to write any code to manage threading pool, single- and multi- threaded implementation can live side-by-site if there's ever a need to debug any logic in <em>process_data</em> function.</p>
+<p>Still this threading library implemented in python, whic is not true threading and multi-threaded code is a subject of Global Interpreter Lock so the CPU-bound tasks will not benefit from this.</p>
+<p>ThreadPoolExecutor documentation -- <a class="reference external" href="https://docs.python.org/3/library/concurrent.futures.html">https://docs.python.org/3/library/concurrent.futures.html</a></p>
+                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="https://avolkov.github.io/quick-gitlab-runner-setup.html" rel="bookmark"
+                           title="Permalink to Quick gitlab runner setup">Quick gitlab runner setup</a></h1>
+                </header>
+
+                <div class="entry-content">
 <footer class="post-info">
         <abbr class="published" title="2018-05-01T00:00:00-04:00">
                 Published: Tue 01 May 2018
@@ -37,84 +89,11 @@
         </address>
 <p>In <a href="https://avolkov.github.io/category/ci.html">ci,</a>.</p>
 <p>tags: <a href="https://avolkov.github.io/tag/gitlab.html">gitlab</a> <a href="https://avolkov.github.io/tag/git-plone.html">git. plone</a> <a href="https://avolkov.github.io/tag/gitlab-ci.html">gitlab ci</a> <a href="https://avolkov.github.io/tag/ci.html">ci</a> </p>
-</footer><!-- /.post-info --><p>Gitlab runner is a continuous integration tool that I've found it to be a lot easier than Jenkins to wrap my head around when it comes to deploying source code to demo machines.</p>
-<p>In this scenario gitlab runner it pulls per-project source code to a runner machine then executes any of the commands specified in <cite>.gitlab-ci.yml</cite> from source code root directory.</p>
-<p>Here's a sample configuration of updating source code on buildout-based Plone 5 project:</p>
-<div class="highlight"><pre><span></span>stages:
-  - deploy
-001 stop plone server:
-  stage: deploy
-  script:
-    - ./bin/supervisorctl shutdown
-  cache:
-    paths:
-      - .installed.cfg
-      - bin/*
-      - develop-eggs/*
-      - downloads/*
-      - eggs/*
-      - parts/*
-      - var/*
-002 rebuild project:
-  stage: deploy
-  script:
-    - ./bin/buildout -v -c buildout_prod.cfg
-    - ./bin/supervisord
-  cache:
-    paths:
-      - .installed.cfg
-      - bin/*
-      - develop-eggs/*
-      - downloads/*
-      - eggs/*
-      - parts/*
-      - var/*
-</pre></div>
-<p>I've been repeating a task of installing a runner for a particular projects -- setting up a gitlab runner, and I've found it to be spread over at least 3 documents:</p>
-<ul class="simple">
-<li><a class="reference external" href="https://docs.gitlab.com/runner/install/linux-repository.html">Install GitLab Runner using the official GitLab repositories</a></li>
-<li><a class="reference external" href="https://docs.gitlab.com/runner/register/index.html">Registering runners</a></li>
-<li><a class="reference external" href="https://docs.gitlab.com/runner/commands/README.html">Gitlab Runner commands</a></li>
-</ul>
-<p>To get runner installed and registered, the following steps should be taken:</p>
-<ol class="arabic simple">
-<li>Add gitlab-runner repo</li>
-</ol>
-<p>CentOS 7</p>
-<div class="highlight"><pre><span></span># curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | sudo bash
-</pre></div>
-<p>Debian</p>
-<div class="highlight"><pre><span></span># curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash
-</pre></div>
-<ol class="arabic simple" start="2">
-<li>Install gitlab-runner package</li>
-</ol>
-<p>CentOS 7</p>
-<div class="highlight"><pre><span></span># yum install gitlab-runner
-</pre></div>
-<p>Debian</p>
-<div class="highlight"><pre><span></span># apt-get install gitlab-runner
-</pre></div>
-<ol class="arabic simple" start="3">
-<li>Remove default gitlab-runner configuration (as root) and run it as a selected user. This step is not required if you're using default configuration, but in my case I have already setup environment for user 'alex' and it is a lot easier to run jobs there.</li>
-</ol>
-<div class="highlight"><pre><span></span># gitlab-runner uninstall
-# gitlab-runner install --working-directory=/home/alex --user=alex
-</pre></div>
-<ol class="arabic simple" start="4">
-<li>Register gitlab runner with a gitlab server</li>
-</ol>
-<div class="highlight"><pre><span></span># gitlab-runner register
-</pre></div>
-<p>For the last step the registration information is found in <cite>&lt;gitlab server&gt;/admin/runners</cite></p>
-<img alt="gitlab runner token info" class="align-center" src="images/0005_gitab_ci_runner.png" style="width: 600px;" />
-<p>This document provides instructions on how to lock shared runners to specific projects -- <a class="reference external" href="https://docs.gitlab.com/ee/ci/runners/">https://docs.gitlab.com/ee/ci/runners/</a></p>
-                </article>
-            </aside><!-- /#featured -->
-                <section id="content" class="body">
-                    <h1>Other articles</h1>
-                    <hr />
-                    <ol id="posts-list" class="hfeed">
+</footer><!-- /.post-info -->                <p class="first last">gitlab-runner setup for simple ci configuration</p>
+
+                <a class="readmore" href="https://avolkov.github.io/quick-gitlab-runner-setup.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
 
             <li><article class="hentry">
                 <header>
@@ -299,31 +278,6 @@
                 <a class="readmore" href="https://avolkov.github.io/running-jenkins-in-docker.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
-
-            <li><article class="hentry">
-                <header>
-                    <h1><a href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html" rel="bookmark"
-                           title="Permalink to Linting and declaration lookup for Python with Sublime Text 3">Linting and declaration lookup for Python with Sublime Text 3</a></h1>
-                </header>
-
-                <div class="entry-content">
-<footer class="post-info">
-        <abbr class="published" title="2016-10-23T22:18:00-04:00">
-                Published: Sun 23 October 2016
-        </abbr>
-
-        <address class="vcard author">
-                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
-        </address>
-<p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
-<p>tags: <a href="https://avolkov.github.io/tag/sublime.html">sublime</a> <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/anaconda.html">anaconda</a> <a href="https://avolkov.github.io/tag/programming.html">programming</a> <a href="https://avolkov.github.io/tag/debian.html">debian</a> </p>
-</footer><!-- /.post-info -->                <p>Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:</p>
-<ul class="simple">
-<li>linting -- letting the computer keep track of consistent coding style</li>
-<li>definition lookup -- letting the computer to look …</li></ul>
-                <a class="readmore" href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html">read more</a>
-                </div><!-- /.entry-content -->
-            </article></li>
                 </ol><!-- /#posts-list -->
 <p class="paginator">
     Page 1 / 2
@@ -336,7 +290,7 @@
                         <ul>
                             <li><a href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
 
-                            <li><a href="https://twitter.com/a_volkov">twitter</a></li>
+                            <li><a href="https://mastodon.xyz/@avolkov">mastodon</a></li>
                             <li><a href="http://flamy.ca">homepage</a></li>
                         </ul>
                 </div><!-- /.social -->
