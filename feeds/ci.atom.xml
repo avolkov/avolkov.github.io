@@ -72,4 +72,4 @@
 &lt;p&gt;For the last step the registration information is found in &lt;cite&gt;&amp;lt;gitlab server&amp;gt;/admin/runners&lt;/cite&gt;&lt;/p&gt;
 &lt;img alt="gitlab runner token info" class="align-center" src="images/0005_gitab_ci_runner.png" style="width: 600px;" /&gt;
 &lt;p&gt;This document provides instructions on how to lock shared runners to specific projects -- &lt;a class="reference external" href="https://docs.gitlab.com/ee/ci/runners/"&gt;https://docs.gitlab.com/ee/ci/runners/&lt;/a&gt;&lt;/p&gt;
-</content><category term="gitlab"></category><category term="git. plone"></category><category term="gitlab ci"></category><category term="ci"></category></entry></feed>
+</content><category term="gitlab"></category><category term="git"></category><category term="plone"></category><category term="gitlab ci"></category><category term="ci"></category></entry></feed>
