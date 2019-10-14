@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>Simple threading in Python 3</title>
+        <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
+        <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
+                <nav><ul>
+                    <li><a href="https://avolkov.github.io/category/ci.html">ci</a></li>
+                    <li><a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a></li>
+                    <li><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
+                    <li class="active"><a href="https://avolkov.github.io/category/programming.html">programming</a></li>
+                    <li><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
+                    <li><a href="https://avolkov.github.io/category/tools.html">tools</a></li>
+                    <li><a href="https://avolkov.github.io/category/video-editing.html">video editing</a></li>
+                    <li><a href="https://avolkov.github.io/category/web-application-development.html">web application development</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="https://avolkov.github.io/simple-threading-in-python-3.html" rel="bookmark"
+           title="Permalink to Simple threading in Python 3">Simple threading in Python 3</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2018-08-13T00:00:00-04:00">
+                Published: Mon 13 August 2018
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/programming.html">programming</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/multithreading.html">multithreading</a> </p>
+</footer><!-- /.post-info -->      <p>I've been working in Python 3 on an an embarrassingly parallel task of parsing and importing data into Postgres. Once I've done single-threaded implementation I looked around for parallelizing the program and after a few tries I managed to get everything running in parallel.</p>
+<p>This is a quick note on how to get a thread pool working in Python 3.6</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+
+<span class="k">def</span> <span class="nf">data_source</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Fetch data to be processed in parallel&quot;&quot;&quot;</span>
+    <span class="c1"># Implement fetching data</span>
+    <span class="k">yield</span> <span class="n">item</span>
+
+<span class="k">def</span> <span class="nf">process_data</span><span class="p">(</span><span class="n">input_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Process data without modifying input&quot;&quot;&quot;</span>
+    <span class="c1"># Implement saving data to postgres</span>
+
+
+<span class="n">MAX_THREADS</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">pool</span> <span class="o">=</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">MAX_THREADS</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data_source</span><span class="p">():</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">process_data</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</pre></div>
+<p>In the code block above, <strong>data_source</strong> function is an iterator that generates one <strong>value</strong> at a time. <strong>pool.submit</strong> calls <strong>process_data</strong> with <strong>value</strong> as a parameter of <strong>process_data</strong> in parallel until thread pool limited in size by <strong>MAX_THREADS</strong> is exhausted, then the program waits for a thread to become available and fetches the next value, until <strong>data_sources</strong> generator is exhausted.</p>
+<p>In this example <strong>pool.submit</strong> passes single parameter <strong>value</strong> to <strong>process_data</strong>, but <strong>pool.submit</strong> can pass any number of parameters required for the callee function i.e.</p>
+<div class="highlight"><pre><span></span><span class="n">pool_submit</span><span class="p">(</span><span class="n">callee_func</span><span class="p">,</span> <span class="n">callee_param_1</span><span class="p">,</span> <span class="n">callee_param_n</span><span class="p">,</span> <span class="o">...</span> <span class="n">callee_param_n</span><span class="p">)</span>
+</pre></div>
+<p>I really like this threading implementation because it's really simple, there's no need to write any code to manage threading pool, single- and multi- threaded implementation can live side-by-site if there's ever a need to debug any logic in <em>process_data</em> function.</p>
+<p>Still this threading library implemented in python, whic is not true threading and multi-threaded code is a subject of Global Interpreter Lock so the CPU-bound tasks will not benefit from this.</p>
+<p>ThreadPoolExecutor documentation -- <a class="reference external" href="https://docs.python.org/3/library/concurrent.futures.html">https://docs.python.org/3/library/concurrent.futures.html</a></p>
+
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                            <li><a href="https://mastodon.xyz/@avolkov">mastodon</a></li>
+                            <li><a href="http://flamy.ca">homepage</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-87694404-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+</body>
+</html>

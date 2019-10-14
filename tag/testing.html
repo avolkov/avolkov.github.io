@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>disparate notes - testing</title>
+        <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
+        <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
+                <nav><ul>
+                    <li><a href="https://avolkov.github.io/category/ci.html">ci</a></li>
+                    <li><a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a></li>
+                    <li><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
+                    <li><a href="https://avolkov.github.io/category/programming.html">programming</a></li>
+                    <li><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
+                    <li><a href="https://avolkov.github.io/category/tools.html">tools</a></li>
+                    <li><a href="https://avolkov.github.io/category/video-editing.html">video editing</a></li>
+                    <li><a href="https://avolkov.github.io/category/web-application-development.html">web application development</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/testing-python-with-mock.html">Testing Python with Mock</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2016-12-17T00:00:00-05:00">
+                Published: Sat 17 December 2016
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/testing.html">testing</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/testing.html">testing</a> <a href="https://avolkov.github.io/tag/mock.html">mock</a> </p>
+</footer><!-- /.post-info --><div class="section" id="preamble">
+<h2>Preamble</h2>
+<p>In the past few months I've been fortunate enough to write code using TDD. There a brief outline of my experiences using python Mock library help with adding test coverage for the code which is hard to test.</p>
+</div>
+<div class="section" id="lessons-learned-from-using-mock">
+<h2>Lessons learned from using mock</h2>
+<p>Mocking internals of your application is hard, mostly because of dependencies on the other parts of the program, in this case object should be mocked if there is no other choice -- a much better approach is to just create object instances, this is especially true when creating database-backed objects. Integration tests of real database-backed object will verify application logic, as well as database relationships.</p>
+<p>Mocks, however, are perfect when faking third party API responses -- there's no application interdependencies to be aware of, the test suite allows to execute code as is, without relying on third-party services or sending any data out, it codifies third party API responses as they are used by your application -- the latter point is especially helpful when a third party API changes between the releases, and any unexpected errors raised after an upgrade, can be quickly identified.</p>
+</div>
+<div class="section" id="knowing-where-to-inject-mock-object">
+<h2>Knowing where to inject mock object</h2>
+<p>The most challenging part of mocking an object is to figure out where to inject a mocked object. The object needs to be mocked whenever its imported and used an not whenever it's defined. This makes sense because the purpose of the test is to check particular code path with a mock and not to mock that object everywhere. However,  my initial assumption was to simply copy import statement from a source, which led to a lot of confusion.</p>
+<p>In the following example, of guessing a number between 0 and 10. If the code was saved in a file <strong>main.py</strong> with import from  <strong>random.randint</strong></p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">guess</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">randint</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Guessed {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)))</span>
+</pre></div>
+<p>Mock setup for this case will have to inject randint mock object into <strong>main</strong> program and not <strong>rand</strong> library.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mock</span> <span class="kn">import</span> <span class="n">patch</span>
+
+<span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;main.randint&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">rnd_mock</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">main</span> <span class="kn">import</span> <span class="n">guess</span>
+    <span class="n">guess</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">rnd_mock</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="debugging-objects-that-don-t-cooperate-with-mock">
+<h2>Debugging objects that don't cooperate with mock</h2>
+<p>The second-most challenging thing about mocking objects is timing -- especially the cases where an original instance of the object gets called before mock patch ever has a chance to replace the object.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mock</span> <span class="kn">import</span> <span class="n">patch</span>
+<span class="kn">from</span> <span class="nn">foo</span> <span class="kn">import</span> <span class="n">bar</span>
+
+<span class="n">bar</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+
+<span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;foo.bar.run&#39;</span><span class="p">):</span>
+    <span class="n">bar</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+<p>In this particular case, going against pythonic way of importing code, keeping all the imports at the top of the file, is justified as this solves the problem, running import within patch section will do the trick.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mock</span> <span class="kn">import</span> <span class="n">patch</span>
+
+<span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;foo.bar.run&#39;</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">foo</span> <span class="kn">import</span> <span class="n">bar</span>
+    <span class="n">bar</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+    <span class="n">bar</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+<p>In general there is no easy solution to this kind of problem, but a useful debugging technique would be to put a debug point before <strong>with</strong> declaration, just inside <strong>with</strong> declaration, and just before the declaration of the object to be mocked. Tracing the order of calls would give a good clue on what's wrong with the mock setup.</p>
+<p>Most of the time, the problem is cause by the wrong assumption about the order of imports.</p>
+</div>
+<div class="section" id="mocked-method-call-vs-mocked-property">
+<h2>Mocked method call vs. mocked property</h2>
+<p>There's a difference between calling a mocked property and a method -- it's possible to just assign the value to a property, however for a function needs to be assigned the return value to the property <strong>return_value</strong> of that mock.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mock</span> <span class="kn">import</span> <span class="n">MagicMock</span>
+<span class="k">def</span> <span class="nf">print_property</span><span class="p">():</span>
+     <span class="n">myobj</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+     <span class="n">myobj</span><span class="o">.</span><span class="n">myprop</span> <span class="o">=</span> <span class="mi">3</span>
+     <span class="k">print</span><span class="p">(</span><span class="n">myobj</span><span class="o">.</span><span class="n">myprop</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">print_method</span><span class="p">():</span>
+    <span class="n">myobj</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+    <span class="n">myobj</span><span class="o">.</span><span class="n">my_method</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">myobj</span><span class="o">.</span><span class="n">my_method</span><span class="p">())</span>
+</pre></div>
+<p>In the case of mocking methods calling other methods, return_value can be skipped until the very last method in the chain</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mock</span> <span class="kn">import</span> <span class="n">MagicMock</span>
+<span class="k">def</span> <span class="nf">print_chained_method</span><span class="p">():</span>
+     <span class="n">myobj</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+     <span class="n">myobj</span><span class="o">.</span><span class="n">a</span><span class="p">()</span><span class="o">.</span><span class="n">b</span><span class="p">()</span><span class="o">.</span><span class="n">c</span><span class="p">()</span><span class="o">.</span><span class="n">last_method</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="mi">42</span>
+     <span class="k">print</span><span class="p">(</span><span class="n">myobj</span><span class="o">.</span><span class="n">a</span><span class="p">()</span><span class="o">.</span><span class="n">b</span><span class="p">()</span><span class="o">.</span><span class="n">c</span><span class="p">()</span><span class="o">.</span><span class="n">last_method</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="section" id="mock-helper-methods">
+<h2>Mock helper methods</h2>
+<p>The following helper methods are useful when examining mocks state of how many times and with which parameters a mock was called.</p>
+<p>See mock documentation for more info -- <a class="reference external" href="https://docs.python.org/3/library/unittest.mock.html">https://docs.python.org/3/library/unittest.mock.html</a></p>
+<p><strong>method calls</strong> -- a method for tracking any calls to mock objects as well as calls to their methods and attributes.</p>
+<p>i.e. The object hasn't been called</p>
+<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">mailer</span><span class="o">.</span><span class="n">method_calls</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[]</span>
+</pre></div>
+<p>A constructor has been called with a 'Message' object</p>
+<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="n">mailer</span><span class="p">()</span><span class="o">.</span><span class="n">method_calls</span>
+<span class="o">&gt;&gt;&gt;</span><span class="p">[</span><span class="n">call</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="o">&lt;</span><span class="n">pyramid_mailer</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">Message</span> <span class="nb">object</span> <span class="n">at</span> <span class="mh">0x7fb9cae06e90</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+<p><strong>call_args</strong> -- the arguments the mock was last called with. This method will only return arguments from the last call. To get arguments from all calls, use <em>call_args_list</em>.</p>
+<p><strong>call_args_list</strong> -- list of the calls made to the mock objects in a sequence. Useful for figuring out the order of calls.</p>
+<p><strong>call_count</strong> -- the number of times mock object was called</p>
+<p><strong>mock_calls</strong> -- records all calls to the mock object, its methods, magic methods and return value mocks.</p>
+</div>
+                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="https://avolkov.github.io/nose2-profiler-setup.html" rel="bookmark"
+                           title="Permalink to Nose2 profiler setup">Nose2 profiler setup</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2016-11-17T00:00:00-05:00">
+                Published: Thu 17 November 2016
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/testing.html">testing</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/testing.html">testing</a> <a href="https://avolkov.github.io/tag/nose2.html">nose2</a> <a href="https://avolkov.github.io/tag/profiling.html">profiling</a> </p>
+</footer><!-- /.post-info -->                <p class="first last">nose2 profiling configuration</p>
+
+                <a class="readmore" href="https://avolkov.github.io/nose2-profiler-setup.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="https://avolkov.github.io/cricket-awesome-ugly-test-visualizer.html" rel="bookmark"
+                           title="Permalink to Cricket -- awesome ugly test visualizer">Cricket -- awesome ugly test visualizer</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2016-11-16T00:00:00-05:00">
+                Published: Wed 16 November 2016
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/testing.html">testing</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/testing.html">testing</a> <a href="https://avolkov.github.io/tag/cricket.html">cricket</a> </p>
+</footer><!-- /.post-info -->                <p class="first last">Cricket, a handy GUI tool for running tests in python</p>
+
+                <a class="readmore" href="https://avolkov.github.io/cricket-awesome-ugly-test-visualizer.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+                </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                            <li><a href="https://mastodon.xyz/@avolkov">mastodon</a></li>
+                            <li><a href="http://flamy.ca">homepage</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-87694404-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+</body>
+</html>

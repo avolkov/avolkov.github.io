@@ -15,142 +15,118 @@
         <header id="banner" class="body">
                 <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
                 <nav><ul>
+                    <li><a href="https://avolkov.github.io/category/ci.html">ci</a></li>
+                    <li><a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a></li>
                     <li><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
+                    <li><a href="https://avolkov.github.io/category/programming.html">programming</a></li>
+                    <li><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
+                    <li><a href="https://avolkov.github.io/category/tools.html">tools</a></li>
+                    <li><a href="https://avolkov.github.io/category/video-editing.html">video editing</a></li>
+                    <li><a href="https://avolkov.github.io/category/web-application-development.html">web application development</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html">Linting and declaration lookup for Python with Sublime Text 3</a></h1>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/speeding-up-generation-of-kdenlive-proxies-with-nvenc.html">Speeding up generation of Kdenlive proxies with nvenc</a></h1>
 <footer class="post-info">
-        <abbr class="published" title="2016-10-23T22:18:00-04:00">
-                Published: Sun 23 October 2016
+        <abbr class="published" title="2019-10-14T00:00:00-04:00">
+                Published: Mon 14 October 2019
         </abbr>
 
         <address class="vcard author">
                 By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
         </address>
-<p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
-<p>tags: <a href="https://avolkov.github.io/tag/sublime.html">sublime</a> <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/anaconda.html">anaconda</a> <a href="https://avolkov.github.io/tag/programming.html">programming</a> <a href="https://avolkov.github.io/tag/debian.html">debian</a> </p>
-</footer><!-- /.post-info --><p>Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:</p>
-<ul class="simple">
-<li>linting -- letting the computer keep track of consistent coding style</li>
-<li>definition lookup -- letting the computer to look up location of definitions</li>
-</ul>
-<p>Linting is provided by SublimeLinter <a class="footnote-reference" href="#id7" id="id1">[1]</a> and function definition lookup by Anaconda Python IDE <a class="footnote-reference" href="#id8" id="id2">[2]</a>. This article assumes Package Control <a class="footnote-reference" href="#id9" id="id3">[3]</a>  is already been installed.</p>
-<div class="section" id="prerequisites">
-<h2>Prerequisites</h2>
-<p>Install flake8 code analyzer <a class="footnote-reference" href="#id10" id="id4">[4]</a> on the system for both Python 2 and 3, it's required by SublimeLinter.</p>
-<div class="highlight"><pre><span></span>apt-get install python-flake8 python3-flake8
+<p>In <a href="https://avolkov.github.io/category/video-editing.html">video editing</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/kdenlive.html">kdenlive</a> <a href="https://avolkov.github.io/tag/video-editing.html">video editing</a> </p>
+</footer><!-- /.post-info --><div class="section" id="background">
+<h2>Background</h2>
+<p>I've been using kdenlive video editor in the past year or so, and I like it a lot. But sometimes when I edit lots of videos it gets frustrating when the computer needs to stop and load another clip from storage device during preview. It takes a while even on an SSD drive.</p>
+<p>Proxies are just low-res re-encodings of the same video, that lets kdenlive load smaller clips, which takes significantly less time and makes the editor more responsive. The proxy clips need to be encoded in the first place, when the videos are originally loaded into the project.</p>
+<p>This is where nvenc comes in. NVENC uses nvidia graphics card to greatly speed up video encoding at the price of running proprietary libraries that aren't compiled into a default package.</p>
+<p>This guide assumes you are running Debian with nvidia libraries installed and using ffmpeg from <cite>deb-multimedia repository &lt;https://www.deb-multimedia.org/&gt;_</cite>.</p>
+<p>I did a talk on the basics of setting up nvidia libraries and ffmpeg codec for debian here -- <a class="reference external" href="https://youtu.be/eMu7ynAwECY?t=173">GPU computing in Debian with Alex Volkov</a>
+I'm using GeForce GTX1060 6GB on running debian testing (bullseye).</p>
+<p>For quick video scaling you need to have <a class="reference external" href="https://developer.nvidia.com/ffmpeg">CUDA Scale Filter</a> however, it's not shipped by default with ffmpeg not even in deb-multimedia repository because it relies on <cite>libnppc10 &lt;https://packages.debian.org/bullseye/libnppc10&gt;</cite> which is in non-free, and having a dependency on a non-free repository is against the packaging policy of deb-multimedia. So this has to be compiled manually.</p>
+</div>
+<div class="section" id="manually-compile-ffmpeg-to-add-scale-npp-support">
+<h2>Manually compile FFMPEG to add scale_npp support</h2>
+<p>Install libnppc10 package that provides scale_npp filter.</p>
+<div class="highlight"><pre><span></span># apt install libnppc10
+</pre></div>
+<p>Install all build dependencies of ffmpeg</p>
+<div class="highlight"><pre><span></span># apt-get build-dep ffmpeg
+</pre></div>
+<p>Find a folder on your computer where the build take place, the whole thing takes about 2.8GB of space. Download source code with the following command.</p>
+<div class="highlight"><pre><span></span>$ apt-get source ffmpeg
+</pre></div>
+<p>Once ffmpeg source has been downloaded, add the following configuration parameters in <strong>debian/rules</strong> under CONFIG_ALL variable</p>
+<div class="highlight"><pre><span></span>CONFIG_ALL = \
+--enable-libnpp \
+--enable-cuda \
+</pre></div>
+<p>Compile the package. This is going to take a while.</p>
+<div class="highlight"><pre><span></span>$ dpkg-buildpackage
+</pre></div>
+<p>Now if you go one directory level up, you should see the following packages created at the end of compilation process.</p>
+<div class="highlight"><pre><span></span>$ ls | grep .deb$
+ffmpeg_4.2.1-dmo3_amd64.deb
+ffmpeg-dbgsym_4.2.1-dmo3_amd64.deb
+ffmpeg-doc_4.2.1-dmo3_all.deb
+libavcodec58_4.2.1-dmo3_amd64.deb
+libavcodec58-dbgsym_4.2.1-dmo3_amd64.deb
+libavcodec-dev_4.2.1-dmo3_amd64.deb
+libavdevice58_4.2.1-dmo3_amd64.deb
+libavdevice58-dbgsym_4.2.1-dmo3_amd64.deb
+libavdevice-dev_4.2.1-dmo3_amd64.deb
+libavfilter7_4.2.1-dmo3_amd64.deb
+libavfilter7-dbgsym_4.2.1-dmo3_amd64.deb
+libavfilter-dev_4.2.1-dmo3_amd64.deb
+libavformat58_4.2.1-dmo3_amd64.deb
+libavformat58-dbgsym_4.2.1-dmo3_amd64.deb
+libavformat-dev_4.2.1-dmo3_amd64.deb
+libavresample4_4.2.1-dmo3_amd64.deb
+libavresample4-dbgsym_4.2.1-dmo3_amd64.deb
+libavresample-dev_4.2.1-dmo3_amd64.deb
+libavutil56_4.2.1-dmo3_amd64.deb
+libavutil56-dbgsym_4.2.1-dmo3_amd64.deb
+libavutil-dev_4.2.1-dmo3_amd64.deb
+libpostproc55_4.2.1-dmo3_amd64.deb
+libpostproc55-dbgsym_4.2.1-dmo3_amd64.deb
+libpostproc-dev_4.2.1-dmo3_amd64.deb
+libswresample3_4.2.1-dmo3_amd64.deb
+libswresample3-dbgsym_4.2.1-dmo3_amd64.deb
+libswresample-dev_4.2.1-dmo3_amd64.deb
+libswscale5_4.2.1-dmo3_amd64.deb
+libswscale5-dbgsym_4.2.1-dmo3_amd64.deb
+libswscale-dev_4.2.1-dmo3_amd64.deb
+</pre></div>
+<p>Install the packages using the following command</p>
+<div class="highlight"><pre><span></span># dpkg -i *.deb
+</pre></div>
+<p>Verify that scale_npp filter is available with the following command</p>
+<div class="highlight"><pre><span></span>$ ffmpeg -hide_banner -filters | grep scale_npp
+... scale_npp         V-&gt;V       NVIDIA Performance Primitives video scaling and format conversion
 </pre></div>
 </div>
-<div class="section" id="sublime-package-installation">
-<h2>Sublime Package Installation</h2>
-<p>Install the following Sublime packages: <em>SublimeLinter</em>, <em>SublimeLinter-flake8</em> and <em>Anaconda</em>.</p>
-<p>For each package repeat the following process -- Invoke package control by bringing command pallet with <strong>Ctrl+Shift+p</strong> start typing <em>install</em>, then select <em>Package Control: Install Package</em> type package name and hit enter.</p>
+<div class="section" id="make-kdenlive-to-use-scale-npp-proxies">
+<h2>Make kdenlive to use scale_npp proxies</h2>
+<p>Once scale_npp filter is available, let kdenlive use it. I tested this on Kdenlive 19.08.1.</p>
+<p>Go to <strong>Settings -&gt; Configure Kdenlive -&gt; Proxy Clips</strong></p>
+<p>Click settings next to an encoding profile and then add a new profile.</p>
+<img alt="Add new proxy encoding profile" class="align-center" src="images/2019-10-14/001-add-proxy-clip.png" />
+<p>I use the following proxy, specifically for the video output of my Panasonic GH4 in MOV mode. I find if I try to use other codec than aac, I'd get 'Not supported errors'</p>
+<p><strong>Profile Name:</strong> x264-nvenc-gh4-aac-h264_cuvid</p>
+<p><strong>Parameters:</strong> -hwaccel cuvid -c:v h264_cuvid -i -vf scale_npp=720:-2 -vcodec h264_nvenc -g 1 -bf 0 -vb 0 -preset fast -acodec aac</p>
+<p><strong>File Exension:</strong> mov</p>
+<img alt="dialog of profile parameters with the settings above" class="align-center" src="images/2019-10-14/002-profile-parameters.png" />
+<p>Then back in 'Configure Kdenlive' window, go to 'Environment' section and in 'Proxy Clips' set concurrent threads to '1'. My video card supports only two streams and by default two proxy clips are processed at once, if I have more streams than that, nvcodec will raise out of memory error.</p>
+<img alt="setting 1 concurrent proxy clip encoding thread" class="align-center" src="images/2019-10-14/003-proxy-clip-environment.png" />
 </div>
-<div class="section" id="project-preferences">
-<h2>Project Preferences</h2>
-<p>These are per-project settings, go to <em>Project -&gt; Edit Project</em> and paste the following config. If <em>Edit Project</em> item is unavailable, save the project with <em>Project -&gt; Save Project As...</em></p>
-<div class="section" id="top-level-settings-sections">
-<h3>Top-level settings sections</h3>
-<p><strong>SublimeLinter</strong> -- all the settings related to SublimeLinter</p>
-<p><strong>build_systems</strong> -- Default Anaconda build system, configuration parameters to run external program to process project files <a class="footnote-reference" href="#id11" id="id5">[5]</a></p>
-<p><strong>folders</strong> -- Sublime declaration on folders included in the project.</p>
-<p><strong>settings</strong> -- Anaconda interpreter / project settings</p>
-</div>
-<div class="section" id="other-parameters">
-<h3>Other parameters</h3>
-<p>The configuration parameter <em>&#64;python</em> specifies syntax version to lint, in this case Python 2.7.</p>
-<p>In all paths, replace {user} and {project} with actual user and project names. I follow a convention of using project name as the name of the virtual environment for that project.</p>
-<p><strong>extra_paths</strong> -- parameter specifies one or more path to a virtual environment in order to make declaration lookup work for third-party libraries. <a class="footnote-reference" href="#id12" id="id6">[6]</a></p>
-<div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="nt">&quot;SublimeLinter&quot;</span><span class="p">:</span>
-    <span class="p">{</span>
-        <span class="nt">&quot;@python&quot;</span><span class="p">:</span> <span class="mf">2.7</span><span class="p">,</span>
-        <span class="nt">&quot;linters&quot;</span><span class="p">:</span>
-        <span class="p">{</span>
-            <span class="nt">&quot;flake8&quot;</span><span class="p">:</span>
-            <span class="p">{</span>
-                <span class="nt">&quot;max-line-length&quot;</span><span class="p">:</span> <span class="mi">120</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">},</span>
-    <span class="nt">&quot;build_systems&quot;</span><span class="p">:</span>
-    <span class="p">[</span>
-        <span class="p">{</span>
-            <span class="nt">&quot;file_regex&quot;</span><span class="p">:</span> <span class="s2">&quot;^[ ]*File \&quot;(...*?)\&quot;, line ([0-9]*)&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Anaconda Python Builder&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;selector&quot;</span><span class="p">:</span> <span class="s2">&quot;source.python&quot;</span><span class="p">,</span>
-            <span class="nt">&quot;shell_cmd&quot;</span><span class="p">:</span> <span class="s2">&quot;\&quot;/home/{user}/.virtualenvs/{project}/bin/python\&quot; -u \&quot;$file\&quot;&quot;</span>
-        <span class="p">}</span>
-    <span class="p">],</span>
-    <span class="nt">&quot;folders&quot;</span><span class="p">:</span>
-    <span class="p">[</span>
-        <span class="p">{</span>
-            <span class="nt">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;/home/{user}/repos/{project}&quot;</span>
-        <span class="p">}</span>
-    <span class="p">],</span>
-    <span class="nt">&quot;settings&quot;</span><span class="p">:</span>
-    <span class="p">{</span>
-        <span class="nt">&quot;python_interpreter&quot;</span><span class="p">:</span> <span class="s2">&quot;/home/{user}/.virtualenvs/{project}/bin/python&quot;</span><span class="p">,</span>
-        <span class="nt">&quot;extra_paths&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;/home/{user}/.virtualenvs/{project}/&quot;</span><span class="p">],</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="key-shortcut-for-anaconda-goto-definition-lookup">
-<h2>Key Shortcut for Anaconda 'Goto definition..' lookup</h2>
-<p>Anaconda <strong>Goto definition..</strong> action is different from from Sublime Text 3 Built-in <strong>Go To Definition..</strong>, the latter works just fine for project source files, but it doesn't allow for settings in external paths.</p>
-<p>The former can be triggered either by right-clicking on a term, then selecting <strong>Anaconda -&gt; Goto Definition</strong>, or using default key binding <strong>Ctrl + Alt + g</strong>; I find both of the shortcuts inconvenient to use.</p>
-<p>The configuration below assigns this action to <strong>F8</strong> key (which doesn't seem to be used by anything).</p>
-<p>Paste the following code in <strong>Preferences -&gt; Package Settings -&gt; Anaconda -&gt; Key Bindings - User</strong></p>
-<div class="highlight"><pre><span></span><span class="p">[</span>
-    <span class="p">{</span>
-        <span class="nt">&quot;command&quot;</span><span class="p">:</span> <span class="s2">&quot;anaconda_goto&quot;</span><span class="p">,</span>
-        <span class="nt">&quot;keys&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;f8&quot;</span><span class="p">],</span>
-        <span class="nt">&quot;context&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;selector&quot;</span><span class="p">,</span> <span class="nt">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;equal&quot;</span><span class="p">,</span> <span class="nt">&quot;operand&quot;</span><span class="p">:</span> <span class="s2">&quot;source.python&quot;</span><span class="p">}]</span>
-    <span class="p">}</span>
-<span class="p">]</span>
-</pre></div>
-<p>Now set cursor on a term with definition to lookup and press <strong>F8</strong>.</p>
-<table class="docutils footnote" frame="void" id="id7" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[1]</td><td>SublimeLinter 3 -- <a class="reference external" href="http://www.sublimelinter.com/en/latest/">http://www.sublimelinter.com/en/latest/</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id8" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[2]</td><td>Anaconda Python IDE -- <a class="reference external" href="http://damnwidget.github.io/anaconda/">http://damnwidget.github.io/anaconda/</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id9" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[3]</td><td>Package Control, the Sublime Text package manager -- <a class="reference external" href="https://packagecontrol.io/">https://packagecontrol.io/</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id10" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[4]</td><td>Flake 8 the modular source checker, pep8, pyflakes and co -- <a class="reference external" href="https://pypi.python.org/pypi/flake8">https://pypi.python.org/pypi/flake8</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id11" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[5]</td><td>Sublime Text Unofficial Documentation / Build Systems (Batch Processing) -- <a class="reference external" href="http://docs.sublimetext.info/en/latest/file_processing/build_systems.html">http://docs.sublimetext.info/en/latest/file_processing/build_systems.html</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id12" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label">[6]</td><td>Configure Anaconda the Right Way -- <a class="reference external" href="http://damnwidget.github.io/anaconda/anaconda_settings/">http://damnwidget.github.io/anaconda/anaconda_settings/</a></td></tr>
-</tbody>
-</table>
+<div class="section" id="testing">
+<h2>Testing</h2>
+<p>When selecting proxy clip in the clip preview. During clip encoding Video Engine Utilization in nvidia-settings should be between 60%-100%</p>
+<img alt="Typical gpu utilization when encoding proxies" class="align-center" src="images/2019-10-14/004-gpu-utilization.png" />
 </div>
                 </article>
             </aside><!-- /#featured -->
@@ -161,150 +137,216 @@
 
             <li><article class="hentry">
                 <header>
-                    <h1><a href="https://avolkov.github.io/debian-automated-install.html" rel="bookmark"
-                           title="Permalink to Debian Automated Install">Debian Automated Install</a></h1>
+                    <h1><a href="https://avolkov.github.io/fear-of-missing-out-as-a-business-model-for-facebook.html" rel="bookmark"
+                           title="Permalink to Fear Of Missing Out as a business model for Facebook">Fear Of Missing Out as a business model for Facebook</a></h1>
                 </header>
 
                 <div class="entry-content">
 <footer class="post-info">
-        <abbr class="published" title="2016-10-17T21:44:00-04:00">
-                Published: Mon 17 October 2016
+        <abbr class="published" title="2018-11-22T16:50:00-05:00">
+                Published: Thu 22 November 2018
         </abbr>
 
         <address class="vcard author">
                 By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
         </address>
 <p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
-<p>tags: <a href="https://avolkov.github.io/tag/debian.html">debian</a> <a href="https://avolkov.github.io/tag/automation.html">automation</a> <a href="https://avolkov.github.io/tag/preseeding.html">preseeding</a> </p>
-</footer><!-- /.post-info -->                <p>A few days ago in my part of the talk at GTALUG <a class="footnote-reference" href="#id7" id="id1">[1]</a>  I mentioned using Debian automated install <a class="footnote-reference" href="#id8" id="id2">[2]</a> to quickly bring up fully virtualized systems, as one of possible methods of system deployment or testing Ansible scripts.</p>
-<p>This idea worked so well that I made a youtube video ...</p>
-                <a class="readmore" href="https://avolkov.github.io/debian-automated-install.html">read more</a>
+<p>tags: <a href="https://avolkov.github.io/tag/facebook.html">facebook</a> <a href="https://avolkov.github.io/tag/surveillance-capitalism.html">surveillance capitalism</a> </p>
+</footer><!-- /.post-info -->                <p>I have written this post back in September, but didn't get arount to posting it now.</p>
+<p>I  quit twitter back in September, when I finally I got convinced that twitter managed to find business model where they convert human misery into money.</p>
+<p>I'm a member of the board of a …</p>
+                <a class="readmore" href="https://avolkov.github.io/fear-of-missing-out-as-a-business-model-for-facebook.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
 
             <li><article class="hentry">
                 <header>
-                    <h1><a href="https://avolkov.github.io/hello.html" rel="bookmark"
-                           title="Permalink to Hello world">Hello world</a></h1>
+                    <h1><a href="https://avolkov.github.io/simple-threading-in-python-3.html" rel="bookmark"
+                           title="Permalink to Simple threading in Python 3">Simple threading in Python 3</a></h1>
                 </header>
 
                 <div class="entry-content">
 <footer class="post-info">
-        <abbr class="published" title="2016-09-29T22:01:00-04:00">
-                Published: Thu 29 September 2016
+        <abbr class="published" title="2018-08-13T00:00:00-04:00">
+                Published: Mon 13 August 2018
         </abbr>
 
         <address class="vcard author">
                 By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
         </address>
-<p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
-<p>tags: <a href="https://avolkov.github.io/tag/pelican.html">pelican</a> <a href="https://avolkov.github.io/tag/web.html">web</a> <a href="https://avolkov.github.io/tag/rst.html">rst</a> <a href="https://avolkov.github.io/tag/github.html">github</a> <a href="https://avolkov.github.io/tag/first.html">first</a> </p>
-</footer><!-- /.post-info -->                <p>A one way of learning restructured test is to start writing all of the things
-down using rst. <a class="reference external" href="http://docs.getpelican.com/en/3.3.0/getting_started.html">Pelican</a>
-is a rather nice static site generator.</p>
-<p>A short tutorial on how to set up a blog with pelican, rst and github pages can be found
-on <a class="reference external" href="http://www.circuidipity.com/pelican.html">Circuidipity</a>.</p>
-
-                <a class="readmore" href="https://avolkov.github.io/hello.html">read more</a>
+<p>In <a href="https://avolkov.github.io/category/programming.html">programming</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/multithreading.html">multithreading</a> </p>
+</footer><!-- /.post-info -->                <p>I've been working in Python 3 on an an embarrassingly parallel task of parsing and importing data into Postgres. Once I've done single-threaded implementation I looked around for parallelizing the program and after a few tries I managed to get everything running in parallel.</p>
+<p>This is a quick note on …</p>
+                <a class="readmore" href="https://avolkov.github.io/simple-threading-in-python-3.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
 
             <li><article class="hentry">
                 <header>
-                    <h1><a href="https://avolkov.github.io/thursdays-raspberry-pi-meetup.html" rel="bookmark"
-                           title="Permalink to Thursday's Raspberry Pi meetup">Thursday's Raspberry Pi meetup</a></h1>
+                    <h1><a href="https://avolkov.github.io/quick-gitlab-runner-setup.html" rel="bookmark"
+                           title="Permalink to Quick gitlab runner setup">Quick gitlab runner setup</a></h1>
                 </header>
 
                 <div class="entry-content">
 <footer class="post-info">
-        <abbr class="published" title="2016-01-17T22:01:00-05:00">
-                Published: Sun 17 January 2016
+        <abbr class="published" title="2018-05-01T00:00:00-04:00">
+                Published: Tue 01 May 2018
         </abbr>
 
         <address class="vcard author">
                 By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
         </address>
-<p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
-<p>tags: <a href="https://avolkov.github.io/tag/raspberrypi.html">raspberrypi</a> <a href="https://avolkov.github.io/tag/opencv.html">opencv</a> <a href="https://avolkov.github.io/tag/gardening.html">gardening</a> </p>
-</footer><!-- /.post-info -->                <p>I went to <a class="reference external" href="http://www.meetup.com/Raspberry-Pi/">Raspberry Pi meetup</a> on Thursday, January 14, and would like to share some links about the presentation I gave and things I brought with me.</p>
-<ol class="arabic simple">
-<li><a class="reference external" href="https://github.com/avolkov/rpi-opencv">Instructions on setting up OpenCV on Raspbian Jessie</a></li>
-<li><a class="reference external" href="https://github.com/avolkov/my-first-automatic-door-man">My fork of Thiago's automatic doorman that works with PiCamera</a></li>
-<li><a class="reference external" href="https://picamera.readthedocs.org/en/release-1.10/">Python library and ...</a></li></ol>
-                <a class="readmore" href="https://avolkov.github.io/thursdays-raspberry-pi-meetup.html">read more</a>
+<p>In <a href="https://avolkov.github.io/category/ci.html">ci</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/gitlab.html">gitlab</a> <a href="https://avolkov.github.io/tag/git.html">git</a> <a href="https://avolkov.github.io/tag/plone.html">plone</a> <a href="https://avolkov.github.io/tag/gitlab-ci.html">gitlab ci</a> <a href="https://avolkov.github.io/tag/ci.html">ci</a> </p>
+</footer><!-- /.post-info -->                <p class="first last">gitlab-runner setup for simple ci configuration</p>
+
+                <a class="readmore" href="https://avolkov.github.io/quick-gitlab-runner-setup.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
 
             <li><article class="hentry">
                 <header>
-                    <h1><a href="https://avolkov.github.io/fun-of-premature-optimization.html" rel="bookmark"
-                           title="Permalink to Fun of premature optimization">Fun of premature optimization</a></h1>
+                    <h1><a href="https://avolkov.github.io/upgrading-from-old-version-of-gitlab-ce.html" rel="bookmark"
+                           title="Permalink to Upgrading from old version of Gitlab CE">Upgrading from old version of Gitlab CE</a></h1>
                 </header>
 
                 <div class="entry-content">
 <footer class="post-info">
-        <abbr class="published" title="2016-01-09T00:00:00-05:00">
-                Published: Sat 09 January 2016
+        <abbr class="published" title="2018-02-21T00:00:00-05:00">
+                Published: Wed 21 February 2018
         </abbr>
 
         <address class="vcard author">
                 By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
         </address>
 <p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
-<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/apache-logs.html">apache logs</a> <a href="https://avolkov.github.io/tag/regular-expressions.html">regular expressions</a> <a href="https://avolkov.github.io/tag/performance.html">performance</a> </p>
-</footer><!-- /.post-info -->                <p>Last week I deployed a redesigned website that included a new search feature, looking at the server logs I've noticed that users of the site use search. A lot.</p>
-<p>I wanted to know more about what kind of questions end-users were asking, so I wrote a short program to ...</p>
-                <a class="readmore" href="https://avolkov.github.io/fun-of-premature-optimization.html">read more</a>
+<p>tags: <a href="https://avolkov.github.io/tag/git-gitlab.html">git gitlab</a> </p>
+</footer><!-- /.post-info -->                <p>I've came across an old instance of Gitlab running on CentOS 6.</p>
+<p>The old instance version is 8.10.5 installed using omnibus package. The omnibus package contains Postgres database, which needs to be updated from 9.2.x used in 8.10 release to 9.6.x used in …</p>
+                <a class="readmore" href="https://avolkov.github.io/upgrading-from-old-version-of-gitlab-ce.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
 
             <li><article class="hentry">
                 <header>
-                    <h1><a href="https://avolkov.github.io/my-awesome-15k-mec-run.html" rel="bookmark"
-                           title="Permalink to My awesome 15K MEC Run">My awesome 15K MEC Run</a></h1>
+                    <h1><a href="https://avolkov.github.io/installing-python-packages-in-development-mode.html" rel="bookmark"
+                           title="Permalink to Installing python packages in development mode">Installing python packages in development mode</a></h1>
                 </header>
 
                 <div class="entry-content">
 <footer class="post-info">
-        <abbr class="published" title="2015-12-06T22:44:33-05:00">
-                Published: Sun 06 December 2015
+        <abbr class="published" title="2017-01-02T00:00:00-05:00">
+                Published: Mon 02 January 2017
         </abbr>
 
         <address class="vcard author">
                 By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
         </address>
-<p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
-<p>tags: <a href="https://avolkov.github.io/tag/running.html">running</a> </p>
-</footer><!-- /.post-info -->                <p>These are my experiences from MEC Race Seven that happened on October 20, 2015. I posted this a while ago on EYTR page, now I finally got a couple of photos of it.</p>
-<p>I'm still not sure how that's possible but I ran MEC 15K in 1:09 ...</p>
-                <a class="readmore" href="https://avolkov.github.io/my-awesome-15k-mec-run.html">read more</a>
+<p>In <a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/pip.html">pip</a> </p>
+</footer><!-- /.post-info -->                <p class="first last">installing package requirements in development mode</p>
+
+                <a class="readmore" href="https://avolkov.github.io/installing-python-packages-in-development-mode.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
 
             <li><article class="hentry">
                 <header>
-                    <h1><a href="https://avolkov.github.io/raspberry-pi-wireless-config.html" rel="bookmark"
-                           title="Permalink to Raspberry Pi Wireless config">Raspberry Pi Wireless config</a></h1>
+                    <h1><a href="https://avolkov.github.io/pyramid-web-app-setup-with-with-postgres-sqlalchemy-and-alembic.html" rel="bookmark"
+                           title="Permalink to Pyramid web app setup with with Postgres, SQLAlchemy and Alembic.">Pyramid web app setup with with Postgres, SQLAlchemy and Alembic.</a></h1>
                 </header>
 
                 <div class="entry-content">
 <footer class="post-info">
-        <abbr class="published" title="2015-12-06T00:57:30-05:00">
-                Published: Sun 06 December 2015
+        <abbr class="published" title="2017-01-01T00:00:00-05:00">
+                Published: Sun 01 January 2017
         </abbr>
 
         <address class="vcard author">
                 By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
         </address>
-<p>In <a href="https://avolkov.github.io/category/misc.html">misc</a>.</p>
-<p>tags: <a href="https://avolkov.github.io/tag/raspberrypi.html">raspberrypi</a> <a href="https://avolkov.github.io/tag/networking.html">networking</a> <a href="https://avolkov.github.io/tag/wireless.html">wireless</a> <a href="https://avolkov.github.io/tag/realtek.html">realtek</a> <a href="https://avolkov.github.io/tag/ralink.html">ralink</a> <a href="https://avolkov.github.io/tag/usb.html">usb</a> </p>
-</footer><!-- /.post-info -->                <p>Here's working wireless configuration I use to connect my Raspberry Pis with USB wifi dongles to my home network.</p>
-<p>I've been using Realtek RTL8188CUS and Ralink RT5370 based devices rated for 150Mbps.</p>
-<p>Dongles based on Ralink chip have been working flawlessly, but I have experienced two issues with ...</p>
-                <a class="readmore" href="https://avolkov.github.io/raspberry-pi-wireless-config.html">read more</a>
+<p>In <a href="https://avolkov.github.io/category/web-application-development.html">web application development</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/pyramid.html">pyramid</a> <a href="https://avolkov.github.io/tag/postgres.html">postgres</a> <a href="https://avolkov.github.io/tag/sqlalchemy.html">sqlalchemy</a> <a href="https://avolkov.github.io/tag/alembic.html">alembic</a> </p>
+</footer><!-- /.post-info -->                <p class="first last">Pyramid web app setup with with Postgres, SQLAlchemy and Alembic.</p>
+
+                <a class="readmore" href="https://avolkov.github.io/pyramid-web-app-setup-with-with-postgres-sqlalchemy-and-alembic.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="https://avolkov.github.io/grapical-tool-for-mercurial-similar-to-git-blame.html" rel="bookmark"
+                           title="Permalink to Grapical tool for mercurial similar to git blame">Grapical tool for mercurial similar to git blame</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2016-12-17T00:00:00-05:00">
+                Published: Sat 17 December 2016
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/tools.html">tools</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/mercurial.html">mercurial</a> <a href="https://avolkov.github.io/tag/hg.html">hg</a> <a href="https://avolkov.github.io/tag/tools.html">tools</a> </p>
+</footer><!-- /.post-info -->                <p class="first last">thg -- A handy GUI tool for looking up historical date</p>
+
+                <a class="readmore" href="https://avolkov.github.io/grapical-tool-for-mercurial-similar-to-git-blame.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="https://avolkov.github.io/testing-python-with-mock.html" rel="bookmark"
+                           title="Permalink to Testing Python with Mock">Testing Python with Mock</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2016-12-17T00:00:00-05:00">
+                Published: Sat 17 December 2016
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/testing.html">testing</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/testing.html">testing</a> <a href="https://avolkov.github.io/tag/mock.html">mock</a> </p>
+</footer><!-- /.post-info -->                <p class="first last">Testing with mocks and less well know mock methods</p>
+
+                <a class="readmore" href="https://avolkov.github.io/testing-python-with-mock.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="https://avolkov.github.io/nose2-profiler-setup.html" rel="bookmark"
+                           title="Permalink to Nose2 profiler setup">Nose2 profiler setup</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2016-11-17T00:00:00-05:00">
+                Published: Thu 17 November 2016
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/testing.html">testing</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/testing.html">testing</a> <a href="https://avolkov.github.io/tag/nose2.html">nose2</a> <a href="https://avolkov.github.io/tag/profiling.html">profiling</a> </p>
+</footer><!-- /.post-info -->                <p class="first last">nose2 profiling configuration</p>
+
+                <a class="readmore" href="https://avolkov.github.io/nose2-profiler-setup.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
                 </ol><!-- /#posts-list -->
+<p class="paginator">
+    Page 1 / 2
+        <a href="https://avolkov.github.io/author/alex-volkov2.html">&raquo;</a>
+</p>
                 </section><!-- /#content -->
         <section id="extras" class="body">
                 <div class="social">
@@ -312,6 +354,8 @@ on <a class="reference external" href="http://www.circuidipity.com/pelican.html"
                         <ul>
                             <li><a href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
 
+                            <li><a href="https://mastodon.xyz/@avolkov">mastodon</a></li>
+                            <li><a href="http://flamy.ca">homepage</a></li>
                         </ul>
                 </div><!-- /.social -->
         </section><!-- /#extras -->
@@ -324,5 +368,14 @@ on <a class="reference external" href="http://www.circuidipity.com/pelican.html"
                 <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
         </footer><!-- /#contentinfo -->
 
+    <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-87694404-1', 'auto');
+    ga('send', 'pageview');
+    </script>
 </body>
 </html>

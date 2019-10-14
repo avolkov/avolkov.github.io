@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>Cricket -- awesome ugly test visualizer</title>
+        <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
+        <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
+                <nav><ul>
+                    <li><a href="https://avolkov.github.io/category/ci.html">ci</a></li>
+                    <li><a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a></li>
+                    <li><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
+                    <li><a href="https://avolkov.github.io/category/programming.html">programming</a></li>
+                    <li class="active"><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
+                    <li><a href="https://avolkov.github.io/category/tools.html">tools</a></li>
+                    <li><a href="https://avolkov.github.io/category/video-editing.html">video editing</a></li>
+                    <li><a href="https://avolkov.github.io/category/web-application-development.html">web application development</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="https://avolkov.github.io/cricket-awesome-ugly-test-visualizer.html" rel="bookmark"
+           title="Permalink to Cricket -- awesome ugly test visualizer">Cricket -- awesome ugly test visualizer</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2016-11-16T00:00:00-05:00">
+                Published: Wed 16 November 2016
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/testing.html">testing</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/testing.html">testing</a> <a href="https://avolkov.github.io/tag/cricket.html">cricket</a> </p>
+</footer><!-- /.post-info -->      <p>I've been writing tests for a while and running them with nose2. One of more labor-intensive interactions with nose2 is typing out paths to individual tests. Cricket -- a part of BeeWare suite solves copying-and-pasting test name problem and provides a nice user interface to summarize results from running test suite.</p>
+<div class="section" id="installing-dependencies">
+<h2>Installing dependencies</h2>
+<p>Cricket has a couple of system-level dependencies: IDLE editor and IDLE library and TkInter.</p>
+<p>For Debian,</p>
+<p>Running Cricket under Python 2.7 the following libraries need to be installed</p>
+<div class="highlight"><pre><span></span>apt-get install idle idle-python2.7 python-tk
+</pre></div>
+<p>Running Cricket Python 3.x the dependencies are</p>
+<div class="highlight"><pre><span></span>apt-get install idle3 idle-python3.5 python-tk
+</pre></div>
+</div>
+<div class="section" id="installing-cricket">
+<h2>Installing cricket</h2>
+<p>Cricket is installed using pip, you can install it in the existing project, or add it in setup.py as one of the dependencies.</p>
+<p>Cricket pip page -- <a class="reference external" href="https://pypi.python.org/pypi/cricket">https://pypi.python.org/pypi/cricket</a></p>
+<div class="highlight"><pre><span></span>(cricket-test)$ pip install cricket
+</pre></div>
+</div>
+<div class="section" id="running-cricket">
+<h2>Running cricket</h2>
+<p>For any python project written with unittest, run <strong>cricket-unittst</strong> for django projects, run <strong>cricket-django</strong>.</p>
+</div>
+<div class="section" id="runnig-sample-pyramid-project-with-cricket">
+<h2>Runnig sample pyramid project with cricket</h2>
+<p>Getting started with cricket -- this example of running Pyramid test under Python 3.5</p>
+<ul class="simple">
+<li>Create Python 3 virtualenv</li>
+</ul>
+<div class="highlight"><pre><span></span>$ mkvirtualenv cricket-test --python `which python3`
+(cricket-test) $ python -V
+Python 3.5.2+
+</pre></div>
+<ul class="simple">
+<li>Pull Pyramid source code</li>
+</ul>
+<div class="highlight"><pre><span></span>(cricket-test) $ git clone https://github.com/Pylons/pyramid.git
+</pre></div>
+<ul class="simple">
+<li>Install Pyramid dependencies</li>
+</ul>
+<div class="highlight"><pre><span></span>(cricket-test) $ cd pyramid/
+(cricket-test) $ pip install -e .
+</pre></div>
+<ul class="simple">
+<li>Install dependencies to run tests</li>
+</ul>
+<div class="highlight"><pre><span></span>(cricket-test) $ pip install -e .[testing]
+</pre></div>
+<ul class="simple">
+<li>Install cricket</li>
+</ul>
+<div class="highlight"><pre><span></span>(cricket-test) $ pip install cricket
+</pre></div>
+<ul class="simple">
+<li>Run cricket</li>
+</ul>
+<div class="highlight"><pre><span></span>(cricket-test) $ cricket-unittest &amp;
+</pre></div>
+<p>The following UI should appear. If you want to be able to use code coverage tool -- Duvet -- <a class="reference external" href="https://pypi.python.org/pypi/duvet">https://pypi.python.org/pypi/duvet</a>, install it with pip using the following command</p>
+<div class="highlight"><pre><span></span>(cricket-test) $ pip install duvet
+</pre></div>
+<p>Cricket: running all test by pressing <strong>Run All</strong></p>
+<img alt="Cricket - run all tests" class="align-center" src="images/0001_cricket_ran.png" style="width: 600px; height: 484px;" />
+<p>Cricket: copying single test, by selecting a test then pressing <strong>Run Selected</strong></p>
+<img alt="Cricket - ran an individual test" class="align-center" src="images/0002_cricket_individual_test.png" style="width: 600px; height: 484px;" />
+<p>Cricket: running a group of tests, by selecting a top-level filename or class, then pressing <strong>Run Selected</strong></p>
+<img alt="Cricket -- ran a group of tests" class="align-center" src="images/0003_cricket_ran_test_group.png" style="width: 600px; height: 484px;" />
+</div>
+<div class="section" id="missing-dependencies-errors">
+<h2>Missing dependencies errors</h2>
+<p>If any of system packages is missing from the system the following errors will be triggered when trying to run Cricket.</p>
+<div class="section" id="missing-python-tkinter">
+<h3>Missing python-tkinter</h3>
+<div class="highlight"><pre><span></span>Traceback (most recent call last):
+File &quot;/home/alex/.virtualenvs/cricket-test/bin/cricket-unittest&quot;, line 7, in &lt;module&gt;
+from cricket.unittest.__main__ import main
+File &quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/unittest/__main__.py&quot;, line 4, in &lt;module&gt;
+from cricket.main import main as cricket_main
+File &quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/main.py&quot;, line 13, in &lt;module&gt;
+from tkinter import *
+ImportError: No module named tkinter
+</pre></div>
+</div>
+<div class="section" id="missing-idle-idle-python">
+<h3>Missing idle / idle-python</h3>
+<div class="highlight"><pre><span></span>    Traceback (most recent call last):
+File &quot;/home/alex/.virtualenvs/cricket-test/bin/cricket-unittest&quot;, line 7, in &lt;module&gt;
+from cricket.unittest.__main__ import main
+File &quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/unittest/__main__.py&quot;, line 4, in &lt;module&gt;
+from cricket.main import main as cricket_main
+File &quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/main.py&quot;, line 15, in &lt;module&gt;
+from cricket.view import (
+File &quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/view.py&quot;, line 29, in &lt;module&gt;
+from tkreadonly import ReadOnlyText
+File &quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/tkreadonly.py&quot;, line 15, in &lt;module&gt;
+&quot;to work out how to install IDLE and idlelib.&quot;)
+Exception: idlelib could not be found. Check your operating system instructions to work out how to install IDLE and idlelib.
+</pre></div>
+</div>
+</div>
+<div class="section" id="resources">
+<h2>Resources</h2>
+<p>Cricket github page -- <a class="reference external" href="https://github.com/pybee/cricket">https://github.com/pybee/cricket</a></p>
+<p>Duvet github page -- <a class="reference external" href="https://github.com/pybee/duvet">https://github.com/pybee/duvet</a></p>
+<p>python.__init__ podcast: An interview with Russel Keith McGee -- <a class="reference external" href="http://podcastinit.podbean.com/e/episode-64-beeware-with-russell-keith-magee/">http://podcastinit.podbean.com/e/episode-64-beeware-with-russell-keith-magee/</a></p>
+</div>
+
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                            <li><a href="https://mastodon.xyz/@avolkov">mastodon</a></li>
+                            <li><a href="http://flamy.ca">homepage</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-87694404-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>disparate notes - git</title>
+        <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
+        <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
+                <nav><ul>
+                    <li><a href="https://avolkov.github.io/category/ci.html">ci</a></li>
+                    <li><a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a></li>
+                    <li><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
+                    <li><a href="https://avolkov.github.io/category/programming.html">programming</a></li>
+                    <li><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
+                    <li><a href="https://avolkov.github.io/category/tools.html">tools</a></li>
+                    <li><a href="https://avolkov.github.io/category/video-editing.html">video editing</a></li>
+                    <li><a href="https://avolkov.github.io/category/web-application-development.html">web application development</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/quick-gitlab-runner-setup.html">Quick gitlab runner setup</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2018-05-01T00:00:00-04:00">
+                Published: Tue 01 May 2018
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/ci.html">ci</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/gitlab.html">gitlab</a> <a href="https://avolkov.github.io/tag/git.html">git</a> <a href="https://avolkov.github.io/tag/plone.html">plone</a> <a href="https://avolkov.github.io/tag/gitlab-ci.html">gitlab ci</a> <a href="https://avolkov.github.io/tag/ci.html">ci</a> </p>
+</footer><!-- /.post-info --><p>Gitlab runner is a continuous integration tool that I've found it to be a lot easier than Jenkins to wrap my head around when it comes to deploying source code to demo machines.</p>
+<p>In this scenario gitlab runner it pulls per-project source code to a runner machine then executes any of the commands specified in <cite>.gitlab-ci.yml</cite> from source code root directory.</p>
+<p>Here's a sample configuration of updating source code on buildout-based Plone 5 project:</p>
+<div class="highlight"><pre><span></span>stages:
+  - deploy
+001 stop plone server:
+  stage: deploy
+  script:
+    - ./bin/supervisorctl shutdown
+  cache:
+    paths:
+      - .installed.cfg
+      - bin/*
+      - develop-eggs/*
+      - downloads/*
+      - eggs/*
+      - parts/*
+      - var/*
+002 rebuild project:
+  stage: deploy
+  script:
+    - ./bin/buildout -v -c buildout_prod.cfg
+    - ./bin/supervisord
+  cache:
+    paths:
+      - .installed.cfg
+      - bin/*
+      - develop-eggs/*
+      - downloads/*
+      - eggs/*
+      - parts/*
+      - var/*
+</pre></div>
+<p>I've been repeating a task of installing a runner for a particular projects -- setting up a gitlab runner, and I've found it to be spread over at least 3 documents:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://docs.gitlab.com/runner/install/linux-repository.html">Install GitLab Runner using the official GitLab repositories</a></li>
+<li><a class="reference external" href="https://docs.gitlab.com/runner/register/index.html">Registering runners</a></li>
+<li><a class="reference external" href="https://docs.gitlab.com/runner/commands/README.html">Gitlab Runner commands</a></li>
+</ul>
+<p>To get runner installed and registered, the following steps should be taken:</p>
+<ol class="arabic simple">
+<li>Add gitlab-runner repo</li>
+</ol>
+<p>CentOS 7</p>
+<div class="highlight"><pre><span></span># curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | sudo bash
+</pre></div>
+<p>Debian</p>
+<div class="highlight"><pre><span></span># curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash
+</pre></div>
+<ol class="arabic simple" start="2">
+<li>Install gitlab-runner package</li>
+</ol>
+<p>CentOS 7</p>
+<div class="highlight"><pre><span></span># yum install gitlab-runner
+</pre></div>
+<p>Debian</p>
+<div class="highlight"><pre><span></span># apt-get install gitlab-runner
+</pre></div>
+<ol class="arabic simple" start="3">
+<li>Remove default gitlab-runner configuration (as root) and run it as a selected user. This step is not required if you're using default configuration, but in my case I have already setup environment for user 'alex' and it is a lot easier to run jobs there.</li>
+</ol>
+<div class="highlight"><pre><span></span># gitlab-runner uninstall
+# gitlab-runner install --working-directory=/home/alex --user=alex
+</pre></div>
+<ol class="arabic simple" start="4">
+<li>Register gitlab runner with a gitlab server</li>
+</ol>
+<div class="highlight"><pre><span></span># gitlab-runner register
+</pre></div>
+<p>For the last step the registration information is found in <cite>&lt;gitlab server&gt;/admin/runners</cite></p>
+<img alt="gitlab runner token info" class="align-center" src="images/0005_gitab_ci_runner.png" style="width: 600px;" />
+<p>This document provides instructions on how to lock shared runners to specific projects -- <a class="reference external" href="https://docs.gitlab.com/ee/ci/runners/">https://docs.gitlab.com/ee/ci/runners/</a></p>
+                </article>
+            </aside><!-- /#featured -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                            <li><a href="https://mastodon.xyz/@avolkov">mastodon</a></li>
+                            <li><a href="http://flamy.ca">homepage</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-87694404-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+</body>
+</html>

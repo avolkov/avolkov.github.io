@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>disparate notes - alembic</title>
+        <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
+        <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
+                <nav><ul>
+                    <li><a href="https://avolkov.github.io/category/ci.html">ci</a></li>
+                    <li><a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a></li>
+                    <li><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
+                    <li><a href="https://avolkov.github.io/category/programming.html">programming</a></li>
+                    <li><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
+                    <li><a href="https://avolkov.github.io/category/tools.html">tools</a></li>
+                    <li><a href="https://avolkov.github.io/category/video-editing.html">video editing</a></li>
+                    <li><a href="https://avolkov.github.io/category/web-application-development.html">web application development</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/pyramid-web-app-setup-with-with-postgres-sqlalchemy-and-alembic.html">Pyramid web app setup with with Postgres, SQLAlchemy and Alembic.</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2017-01-01T00:00:00-05:00">
+                Published: Sun 01 January 2017
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/web-application-development.html">web application development</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/pyramid.html">pyramid</a> <a href="https://avolkov.github.io/tag/postgres.html">postgres</a> <a href="https://avolkov.github.io/tag/sqlalchemy.html">sqlalchemy</a> <a href="https://avolkov.github.io/tag/alembic.html">alembic</a> </p>
+</footer><!-- /.post-info --><p>This is how I set up a sample web application in development mode using Pyramid 1.7.3, Python 3.x and Postgres 9.x using SQLAlchemy to manage database abstraction and Alembic to manage migrations.</p>
+<div class="section" id="set-up-pyramid-environment">
+<h2>1. Set up pyramid environment</h2>
+<p>Create Python 3 virtual environment then install cookiecutter -- a command line utility for creating and managing project templates.</p>
+<div class="highlight"><pre><span></span>$ mkvirtualenv --python `which python3` pyramid-test
+$ pip install cookiecutter
+</pre></div>
+</div>
+<div class="section" id="create-pyramid-project-w-sqlalchemy-using-cookiecutter">
+<h2>2. Create pyramid project w SQLAlchemy using cookiecutter</h2>
+<p>I'm using the official cookiecutter template from Pylons for Pyramid project with SQLAlchemy ORM and SQLite. Later in the setup, the project settings will be modified for SQLAlchemy to work with Postgres.</p>
+<p>When presented <strong>'project_name[Pyramid Scaffold]'</strong> question in cookicutter setup dialog, specify <strong>pyramid_test</strong> as the name of the project, or the default project name -- 'Pyramid Scaffold' will be used.</p>
+<div class="highlight"><pre><span></span>(pyramid-test)$ cookiecutter https://github.com/Pylons/pyramid-cookiecutter-alchemy
+project_name [Pyramid Scaffold]: pyramid_test
+repo_name [scaffold]:
+
+===============================================================================
+Documentation: http://docs.pylonsproject.org/projects/pyramid/en/latest/
+Tutorials:     http://docs.pylonsproject.org/projects/pyramid_tutorials/en/latest/
+Twitter:       https://twitter.com/trypyramid
+Mailing List:  https://groups.google.com/forum/#!forum/pylons-discuss
+Welcome to Pyramid.  Sorry for the convenience.
+==========================================================================
+Change directory into your newly created project.
+cd scaffold
+Create a Python virtual environment.
+python3 -m venv env
+
+Upgrade packaging tools.
+env/bin/pip install --upgrade pip setuptools
+Install the project in editable mode with its testing requirements.
+env/bin/pip install -e &quot;.[testing]&quot;
+Configure the database:
+env/bin/initialize_scaffold_db development.ini
+Run your project&#39;s tests.
+env/bin/pytest
+Run your project.
+env/bin/pserve development.ini
+</pre></div>
+</div>
+<div class="section" id="install-all-project-dependencies">
+<h2>4. Install all project dependencies</h2>
+<p>Install psycopg2 and alembic python packages, by editing <strong>setup.py</strong> and adding package dependency to <strong>requires</strong> list.</p>
+<div class="highlight"><pre><span></span><span class="n">requires</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="s1">&#39;psycopg2&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;alembic&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+<ul class="simple">
+<li>psycopg2 -- Postgres database driver that lets SQLAlchemy connect to postgres database</li>
+<li>alembic --  a database migration tool for SQLAlchemy.</li>
+</ul>
+<p>The following command install all dependencies specified in 'requirements' section in <strong>setup.py</strong> all requirements for setting up pyramid framework and related dependencies are specified there.</p>
+<div class="highlight"><pre><span></span>(pyramid-test)$ pip install -e .
+</pre></div>
+<p>To verify that the packages were install run the following command that lists installed python packages and make sure psycopg2 and alembic are mentioned</p>
+<div class="highlight"><pre><span></span>(pyramid-test)$ pip freeze
+</pre></div>
+</div>
+<div class="section" id="setup-postgres-db">
+<h2>3. Setup postgres db</h2>
+<p>This step assumes you already installed Postgres 9.x and able to log in as 'postgres' admin user. This setup has been used on Debian systems, but with minor differences in configuration file locations should apply to any Linux distribution.</p>
+<p>Get access to postgres admin shell.</p>
+<div class="highlight"><pre><span></span># su postgres
+$ psql
+postgres=#
+</pre></div>
+<p>Create a user and a database for this project. Here I'm using username 'alex', change username according to your local system username -- this will come in handy when setting up peer authentication.</p>
+<div class="highlight"><pre><span></span>postgres=# CREATE USER alex WITH PASSWORD &#39;secret&#39;;
+postgres=# CREATE DATABASE pyramidtest OWNER alex;
+</pre></div>
+<p>From root console edit <strong>/etc/postgresql/9.x/main/pg_hba.conf</strong> add the following lines at the bottom of the file -- these are declarations for postgres server to allow peer and password authentication.</p>
+<div class="highlight"><pre><span></span>local   postgrestest    alex                                    peer
+host    postgrestest    alex            127.0.0.1               md5
+</pre></div>
+<p>Restart postgres db.</p>
+<div class="highlight"><pre><span></span># service postgresql restart
+</pre></div>
+</div>
+<div class="section" id="connect-to-postgresdb-from-pyramid-project">
+<h2>4. Connect to postgresdb from pyramid project</h2>
+<p>Edit development.ini, updating sqlalchemy.url to the following</p>
+<div class="highlight"><pre><span></span>sqlalchemy.url = postgresql:///pyramidtest
+</pre></div>
+<p>This config line lets pyramid project connect to postgres via unix socket using 'peer' authentication -- the database engine will verify that the name of system account that attempts to log in, matches the name of owner account of the database.
+When 'peer' authentication is used, Postgres doesn't verify the password set with 'CREATE USER..' command.</p>
+</div>
+<div class="section" id="configure-alembic-to-manage-migrations">
+<h2>5. Configure alembic to manage migrations</h2>
+<p>I use alembic to make sure that the project is able to connect to the database and execute its initial migration. Alembic retrieves SQLAlchemy model definitions from <strong>/models/</strong> folder and create appropriate tables in Postgres database.</p>
+<p>Add alembic to one of project requirements in <strong>setup.py</strong></p>
+<div class="highlight"><pre><span></span><span class="n">requires</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="s1">&#39;alembic&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+<p>Then re-install the dependencies.</p>
+<div class="highlight"><pre><span></span>(pyramid-test)$ pip install -e .
+</pre></div>
+<p>Initialize alembic for the project. This creates <strong>/alembic/</strong> subdirectory and populates it with initial configuration.</p>
+<div class="highlight"><pre><span></span>(pyramid-test)$ alembic init alembic
+</pre></div>
+<p>In <strong>alembic.ini</strong> update <strong>sqlalchemy.url</strong> variable to the same <strong>sqlalchemy.url</strong> value set in <strong>development.ini</strong>.</p>
+<div class="highlight"><pre><span></span>sqlalchemy.url = postgresql:///pyramidtest
+</pre></div>
+<div class="section" id="configure-alembic-to-autogenerate-migrations">
+<h3>Configure alembic to autogenerate migrations</h3>
+<p>In <strong>alembic/env.py</strong> import base metadata from project model from <strong>/models/meta.py</strong> file, and assign it to <strong>target_metadata</strong>, so alembic knows which models it has to keep track of.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyramid_test.models.meta</span> <span class="kn">import</span> <span class="n">Base</span>
+<span class="n">target_metadata</span> <span class="o">=</span> <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span>
+</pre></div>
+<p>Generate migrations.</p>
+<div class="highlight"><pre><span></span>$ alembic revision --autogenerate -m &quot;Initial Commit&quot;
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.autogenerate.compare] Detected added table &#39;models&#39;
+INFO  [alembic.autogenerate.compare] Detected added index &#39;my_index&#39; on &#39;[&#39;name&#39;]&#39;
+  Generating /home/alex/gitlab/pyramid_test/alembic/versions/2e0b2d81bfbb_initial_commit.py ... done
+</pre></div>
+<p>The migration script is based on database models in <strong>/models/mymondel.py</strong>, that already has sample model defined by cookiecutter template, see code below.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Column</span><span class="p">,</span>
+    <span class="n">Index</span><span class="p">,</span>
+    <span class="n">Integer</span><span class="p">,</span>
+    <span class="n">Text</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.meta</span> <span class="kn">import</span> <span class="n">Base</span>
+
+
+<span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;models&#39;</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Text</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+
+<span class="n">Index</span><span class="p">(</span><span class="s1">&#39;my_index&#39;</span><span class="p">,</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">mysql_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+</pre></div>
+<p>Migration script containing a sequence of SqlAlchemy (sa) is generated  by alembic and place in a file with the format <strong>[alembic_hash]_initial_commit.py</strong> under <strong>/alembic/versions/</strong>.</p>
+<p>Inside the migration file, <strong>upgrade</strong> function defines database upgrade migration, optional <strong>downgrade</strong> function defines rollback operations.</p>
+<p>The following is a short excerpt from the migration of pyramid-test project.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">upgrade</span><span class="p">():</span>
+    <span class="c1"># ### commands auto generated by Alembic - please adjust! ###</span>
+    <span class="n">op</span><span class="o">.</span><span class="n">create_table</span><span class="p">(</span><span class="s1">&#39;models&#39;</span><span class="p">,</span>
+    <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">sa</span><span class="o">.</span><span class="n">Integer</span><span class="p">(),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span>
+    <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">sa</span><span class="o">.</span><span class="n">Text</span><span class="p">(),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+    <span class="n">sa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">sa</span><span class="o">.</span><span class="n">Integer</span><span class="p">(),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+    <span class="n">sa</span><span class="o">.</span><span class="n">PrimaryKeyConstraint</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="s1">&#39;pk_models&#39;</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">op</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span><span class="s1">&#39;my_index&#39;</span><span class="p">,</span> <span class="s1">&#39;models&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">unique</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">mysql_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+    <span class="c1"># ### end Alembic commands ###</span>
+
+
+<span class="k">def</span> <span class="nf">downgrade</span><span class="p">():</span>
+    <span class="c1"># ### commands auto generated by Alembic - please adjust! ###</span>
+    <span class="n">op</span><span class="o">.</span><span class="n">drop_index</span><span class="p">(</span><span class="s1">&#39;my_index&#39;</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="n">op</span><span class="o">.</span><span class="n">drop_table</span><span class="p">(</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="c1"># ### end Alembic commands ###</span>
+</pre></div>
+<p>For more details see -- <a class="reference external" href="http://alembic.zzzcomputing.com/en/latest/autogenerate.html#auto-generating-migrations">http://alembic.zzzcomputing.com/en/latest/autogenerate.html#auto-generating-migrations</a></p>
+</div>
+</div>
+<div class="section" id="apply-alembic-migrations">
+<h2>6 Apply alembic migrations</h2>
+<div class="highlight"><pre><span></span>(pyramid-test)$ alembic upgrade head
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -&gt; 2e0b2d81bfbb, Initial Commit
+</pre></div>
+<p>This will create two tables in postgrestest database.</p>
+<ul class="simple">
+<li>alembic_version -- keeps track of database versioning for alembic</li>
+<li>models -- model defined in <strong>/models/mymodel.py</strong></li>
+</ul>
+<p>See screenshot below as the contend of the database is displayed in pgadminIII</p>
+<img alt="The result of alembic migration, in Pgadmin3" src="images/0004_alembic_migrations.png" />
+</div>
+<div class="section" id="perform-test-write-to-the-database">
+<h2>7 Perform test write to the database</h2>
+<p>To verify that the database is set up correctly, create a sample object and commit it to the database using Pyramid Shell. The sample code is based on
+<strong>scripts/initialize.db</strong></p>
+<div class="highlight"><pre><span></span>(pyramid-test)$ pshell development.ini
+&gt;&gt;&gt; from pyramid_test.models.mymodel import MyModel
+&gt;&gt;&gt; db = request.dbsession
+&gt;&gt;&gt; obj_one = MyModel(name=&#39;one&#39;, value=1)
+&gt;&gt;&gt; db.add(obj_one)
+&gt;&gt;&gt; request.tm.commit()
+&gt;&gt;&gt; db.flush()
+</pre></div>
+<p>To retrieve newly created object from the database, run the following commands.</p>
+<div class="highlight"><pre><span></span>(pyramid-test)$ pshell development.ini
+&gt;&gt;&gt; from pyramid_test.models.mymodel import MyModel
+&gt;&gt;&gt; db = request.dbsession
+&gt;&gt;&gt; mymodel = db.query(MyModel).one()
+&gt;&gt;&gt; print(mymodel)
+&lt;pyramid_test.models.mymodel.MyModel object at 0x7fce6d83ceb8&gt;
+&gt;&gt;&gt; print(mymodel.name)
+one
+</pre></div>
+<p>The object now persists in the database.</p>
+</div>
+<div class="section" id="run-the-server">
+<h2>8 Run the server</h2>
+<div class="highlight"><pre><span></span>(pyramid-test)$ pserve develoment.ini
+</pre></div>
+<p>Open a web browser and go to <strong>http://localhost:6543/</strong> you will be greeted with pyramid demo message.</p>
+</div>
+<div class="section" id="sample-code">
+<h2>9 Sample Code</h2>
+<p>Sample code for the project located in -- <a class="reference external" href="https://github.com/avolkov/pyramid-test">https://github.com/avolkov/pyramid-test</a></p>
+</div>
+                </article>
+            </aside><!-- /#featured -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                            <li><a href="https://mastodon.xyz/@avolkov">mastodon</a></li>
+                            <li><a href="http://flamy.ca">homepage</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-87694404-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+</body>
+</html>

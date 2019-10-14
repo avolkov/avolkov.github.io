@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>disparate notes - pip</title>
+        <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
+        <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
+                <nav><ul>
+                    <li><a href="https://avolkov.github.io/category/ci.html">ci</a></li>
+                    <li><a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a></li>
+                    <li><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
+                    <li><a href="https://avolkov.github.io/category/programming.html">programming</a></li>
+                    <li><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
+                    <li><a href="https://avolkov.github.io/category/tools.html">tools</a></li>
+                    <li><a href="https://avolkov.github.io/category/video-editing.html">video editing</a></li>
+                    <li><a href="https://avolkov.github.io/category/web-application-development.html">web application development</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/installing-python-packages-in-development-mode.html">Installing python packages in development mode</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2017-01-02T00:00:00-05:00">
+                Published: Mon 02 January 2017
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/python.html">python</a> <a href="https://avolkov.github.io/tag/pip.html">pip</a> </p>
+</footer><!-- /.post-info --><p>When working on a python project with several dependencies, sometimes I want to see what's going on in one of the required packages. I don't use IDEs so the preferred method of debugging code inside of package dependencies is to grep for an entry point to that package inside of virtualenv, open the source file, add a debug point and re-run test suite or a script until the code hits the debug point. Figuring out what is the actual problem left as an exercise to the reader.</p>
+<p>The main issue with the approach above is that when debug console gets activated, it doesn't print out any source code surrounding the debug point, I have to constantly switch between source editor and console hoping that the line printed out in the console matches file lines open in the editor.</p>
+<p>A better approach is to clone the source package in question and then install it in the current virtual environment with regular install command.</p>
+<div class="highlight"><pre><span></span>(myproj)$ python setup.py develop
+</pre></div>
+<p>This solves the immediate problem of debugger not printing line numbers, instead of poking inside of files under virtualenv it's possible to open the files from cloned location. The drawback of this approach is that it still involves a few steps -- I need to figure out where the source package is located, clone it, then run the command.</p>
+<div class="highlight"><pre><span></span>(myproj)$ pip install -e .
+</pre></div>
+<p>I've been using command above as an alias for <strong>python setup.py develop</strong> for a while and assumed it's magical properties for that purpose, however these days pip automates a lot more. According to the man page of version 9.0.1, any path/url can be passed to the command.</p>
+<div class="highlight"><pre><span></span>-e,--editable &lt;path/url&gt;
+Install a project in editable mode (i.e. setuptools &quot;develop mode&quot;) from a local project path or a VCS url.
+</pre></div>
+<p>As well as installing any packages in development mode from local repositories, it's possible to install any remote packages from VCS, since pretty much any project on pypi has link to VCS this becomes a two step process:</p>
+<ul class="simple">
+<li>Lookup package name on pypi.python.org, and copy link to VCS</li>
+<li>run <strong>pip install -e &lt;copied_link&gt;</strong></li>
+</ul>
+<div class="section" id="resources">
+<h2>Resources</h2>
+<p>Debian man page for PIP --  <a class="reference external" href="https://manpages.debian.org/cgi-bin/man.cgi?query=pip&amp;apropos=0&amp;sektion=0&amp;manpath=Debian+8+jessie&amp;format=html&amp;locale=en">https://manpages.debian.org/cgi-bin/man.cgi?query=pip&amp;apropos=0&amp;sektion=0&amp;manpath=Debian+8+jessie&amp;format=html&amp;locale=en</a></p>
+<p>Pip Reference Guide | Pip Install | VCS Support section -- <a class="reference external" href="https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support">https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support</a></p>
+<p>Automating entry function definition lookup with Sublime Text &amp; Anaconda -- <a class="reference external" href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html">https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html</a></p>
+</div>
+                </article>
+            </aside><!-- /#featured -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                            <li><a href="https://mastodon.xyz/@avolkov">mastodon</a></li>
+                            <li><a href="http://flamy.ca">homepage</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-87694404-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+</body>
+</html>

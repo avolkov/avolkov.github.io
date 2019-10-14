@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes - debugging python programs</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/debugging-python-programs.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2017-01-02T00:00:00-05:00</updated><entry><title>Installing python packages in development mode</title><link href="https://avolkov.github.io/installing-python-packages-in-development-mode.html" rel="alternate"></link><published>2017-01-02T00:00:00-05:00</published><updated>2017-01-02T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2017-01-02:/installing-python-packages-in-development-mode.html</id><summary type="html">&lt;p class="first last"&gt;installing package requirements in development mode&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;When working on a python project with several dependencies, sometimes I want to see what's going on in one of the required packages. I don't use IDEs so the preferred method of debugging code inside of package dependencies is to grep for an entry point to that package inside of virtualenv, open the source file, add a debug point and re-run test suite or a script until the code hits the debug point. Figuring out what is the actual problem left as an exercise to the reader.&lt;/p&gt;
+&lt;p&gt;The main issue with the approach above is that when debug console gets activated, it doesn't print out any source code surrounding the debug point, I have to constantly switch between source editor and console hoping that the line printed out in the console matches file lines open in the editor.&lt;/p&gt;
+&lt;p&gt;A better approach is to clone the source package in question and then install it in the current virtual environment with regular install command.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(myproj)$ python setup.py develop
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This solves the immediate problem of debugger not printing line numbers, instead of poking inside of files under virtualenv it's possible to open the files from cloned location. The drawback of this approach is that it still involves a few steps -- I need to figure out where the source package is located, clone it, then run the command.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(myproj)$ pip install -e .
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I've been using command above as an alias for &lt;strong&gt;python setup.py develop&lt;/strong&gt; for a while and assumed it's magical properties for that purpose, however these days pip automates a lot more. According to the man page of version 9.0.1, any path/url can be passed to the command.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;-e,--editable &amp;lt;path/url&amp;gt;
+Install a project in editable mode (i.e. setuptools &amp;quot;develop mode&amp;quot;) from a local project path or a VCS url.
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;As well as installing any packages in development mode from local repositories, it's possible to install any remote packages from VCS, since pretty much any project on pypi has link to VCS this becomes a two step process:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Lookup package name on pypi.python.org, and copy link to VCS&lt;/li&gt;
+&lt;li&gt;run &lt;strong&gt;pip install -e &amp;lt;copied_link&amp;gt;&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="section" id="resources"&gt;
+&lt;h2&gt;Resources&lt;/h2&gt;
+&lt;p&gt;Debian man page for PIP --  &lt;a class="reference external" href="https://manpages.debian.org/cgi-bin/man.cgi?query=pip&amp;amp;apropos=0&amp;amp;sektion=0&amp;amp;manpath=Debian+8+jessie&amp;amp;format=html&amp;amp;locale=en"&gt;https://manpages.debian.org/cgi-bin/man.cgi?query=pip&amp;amp;apropos=0&amp;amp;sektion=0&amp;amp;manpath=Debian+8+jessie&amp;amp;format=html&amp;amp;locale=en&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Pip Reference Guide | Pip Install | VCS Support section -- &lt;a class="reference external" href="https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support"&gt;https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Automating entry function definition lookup with Sublime Text &amp;amp; Anaconda -- &lt;a class="reference external" href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html"&gt;https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="python"></category><category term="pip"></category></entry></feed>

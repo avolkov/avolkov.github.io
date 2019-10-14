@@ -1,5 +1,822 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/all.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2016-10-23T22:18:00-04:00</updated><entry><title>Linting and declaration lookup for Python with Sublime Text 3</title><link href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html" rel="alternate"></link><published>2016-10-23T22:18:00-04:00</published><updated>2016-10-23T22:18:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-23:linting-and-declaration-lookup-for-python-with-sublime-text-3.html</id><summary type="html">&lt;p&gt;Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/all.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2019-10-14T00:00:00-04:00</updated><entry><title>Speeding up generation of Kdenlive proxies with nvenc</title><link href="https://avolkov.github.io/speeding-up-generation-of-kdenlive-proxies-with-nvenc.html" rel="alternate"></link><published>2019-10-14T00:00:00-04:00</published><updated>2019-10-14T00:00:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2019-10-14:/speeding-up-generation-of-kdenlive-proxies-with-nvenc.html</id><summary type="html">&lt;p class="first last"&gt;speedup proxies using nvenc&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="background"&gt;
+&lt;h2&gt;Background&lt;/h2&gt;
+&lt;p&gt;I've been using kdenlive video editor in the past year or so, and I like it a lot. But sometimes when I edit lots of videos it gets frustrating when the computer needs to stop and load another clip from storage device during preview. It takes a while even on an SSD drive.&lt;/p&gt;
+&lt;p&gt;Proxies are just low-res re-encodings of the same video, that lets kdenlive load smaller clips, which takes significantly less time and makes the editor more responsive. The proxy clips need to be encoded in the first place, when the videos are originally loaded into the project.&lt;/p&gt;
+&lt;p&gt;This is where nvenc comes in. NVENC uses nvidia graphics card to greatly speed up video encoding at the price of running proprietary libraries that aren't compiled into a default package.&lt;/p&gt;
+&lt;p&gt;This guide assumes you are running Debian with nvidia libraries installed and using ffmpeg from &lt;cite&gt;deb-multimedia repository &amp;lt;https://www.deb-multimedia.org/&amp;gt;_&lt;/cite&gt;.&lt;/p&gt;
+&lt;p&gt;I did a talk on the basics of setting up nvidia libraries and ffmpeg codec for debian here -- &lt;a class="reference external" href="https://youtu.be/eMu7ynAwECY?t=173"&gt;GPU computing in Debian with Alex Volkov&lt;/a&gt;
+I'm using GeForce GTX1060 6GB on running debian testing (bullseye).&lt;/p&gt;
+&lt;p&gt;For quick video scaling you need to have &lt;a class="reference external" href="https://developer.nvidia.com/ffmpeg"&gt;CUDA Scale Filter&lt;/a&gt; however, it's not shipped by default with ffmpeg not even in deb-multimedia repository because it relies on &lt;cite&gt;libnppc10 &amp;lt;https://packages.debian.org/bullseye/libnppc10&amp;gt;&lt;/cite&gt; which is in non-free, and having a dependency on a non-free repository is against the packaging policy of deb-multimedia. So this has to be compiled manually.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="manually-compile-ffmpeg-to-add-scale-npp-support"&gt;
+&lt;h2&gt;Manually compile FFMPEG to add scale_npp support&lt;/h2&gt;
+&lt;p&gt;Install libnppc10 package that provides scale_npp filter.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# apt install libnppc10
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Install all build dependencies of ffmpeg&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# apt-get build-dep ffmpeg
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Find a folder on your computer where the build take place, the whole thing takes about 2.8GB of space. Download source code with the following command.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ apt-get source ffmpeg
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Once ffmpeg source has been downloaded, add the following configuration parameters in &lt;strong&gt;debian/rules&lt;/strong&gt; under CONFIG_ALL variable&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;CONFIG_ALL = \
+--enable-libnpp \
+--enable-cuda \
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Compile the package. This is going to take a while.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ dpkg-buildpackage
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now if you go one directory level up, you should see the following packages created at the end of compilation process.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ls | grep .deb$
+ffmpeg_4.2.1-dmo3_amd64.deb
+ffmpeg-dbgsym_4.2.1-dmo3_amd64.deb
+ffmpeg-doc_4.2.1-dmo3_all.deb
+libavcodec58_4.2.1-dmo3_amd64.deb
+libavcodec58-dbgsym_4.2.1-dmo3_amd64.deb
+libavcodec-dev_4.2.1-dmo3_amd64.deb
+libavdevice58_4.2.1-dmo3_amd64.deb
+libavdevice58-dbgsym_4.2.1-dmo3_amd64.deb
+libavdevice-dev_4.2.1-dmo3_amd64.deb
+libavfilter7_4.2.1-dmo3_amd64.deb
+libavfilter7-dbgsym_4.2.1-dmo3_amd64.deb
+libavfilter-dev_4.2.1-dmo3_amd64.deb
+libavformat58_4.2.1-dmo3_amd64.deb
+libavformat58-dbgsym_4.2.1-dmo3_amd64.deb
+libavformat-dev_4.2.1-dmo3_amd64.deb
+libavresample4_4.2.1-dmo3_amd64.deb
+libavresample4-dbgsym_4.2.1-dmo3_amd64.deb
+libavresample-dev_4.2.1-dmo3_amd64.deb
+libavutil56_4.2.1-dmo3_amd64.deb
+libavutil56-dbgsym_4.2.1-dmo3_amd64.deb
+libavutil-dev_4.2.1-dmo3_amd64.deb
+libpostproc55_4.2.1-dmo3_amd64.deb
+libpostproc55-dbgsym_4.2.1-dmo3_amd64.deb
+libpostproc-dev_4.2.1-dmo3_amd64.deb
+libswresample3_4.2.1-dmo3_amd64.deb
+libswresample3-dbgsym_4.2.1-dmo3_amd64.deb
+libswresample-dev_4.2.1-dmo3_amd64.deb
+libswscale5_4.2.1-dmo3_amd64.deb
+libswscale5-dbgsym_4.2.1-dmo3_amd64.deb
+libswscale-dev_4.2.1-dmo3_amd64.deb
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Install the packages using the following command&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# dpkg -i *.deb
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Verify that scale_npp filter is available with the following command&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ffmpeg -hide_banner -filters | grep scale_npp
+... scale_npp         V-&amp;gt;V       NVIDIA Performance Primitives video scaling and format conversion
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="make-kdenlive-to-use-scale-npp-proxies"&gt;
+&lt;h2&gt;Make kdenlive to use scale_npp proxies&lt;/h2&gt;
+&lt;p&gt;Once scale_npp filter is available, let kdenlive use it. I tested this on Kdenlive 19.08.1.&lt;/p&gt;
+&lt;p&gt;Go to &lt;strong&gt;Settings -&amp;gt; Configure Kdenlive -&amp;gt; Proxy Clips&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Click settings next to an encoding profile and then add a new profile.&lt;/p&gt;
+&lt;img alt="Add new proxy encoding profile" class="align-center" src="images/2019-10-14/001-add-proxy-clip.png" /&gt;
+&lt;p&gt;I use the following proxy, specifically for the video output of my Panasonic GH4 in MOV mode. I find if I try to use other codec than aac, I'd get 'Not supported errors'&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Profile Name:&lt;/strong&gt; x264-nvenc-gh4-aac-h264_cuvid&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Parameters:&lt;/strong&gt; -hwaccel cuvid -c:v h264_cuvid -i -vf scale_npp=720:-2 -vcodec h264_nvenc -g 1 -bf 0 -vb 0 -preset fast -acodec aac&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;File Exension:&lt;/strong&gt; mov&lt;/p&gt;
+&lt;img alt="dialog of profile parameters with the settings above" class="align-center" src="images/2019-10-14/002-profile-parameters.png" /&gt;
+&lt;p&gt;Then back in 'Configure Kdenlive' window, go to 'Environment' section and in 'Proxy Clips' set concurrent threads to '1'. My video card supports only two streams and by default two proxy clips are processed at once, if I have more streams than that, nvcodec will raise out of memory error.&lt;/p&gt;
+&lt;img alt="setting 1 concurrent proxy clip encoding thread" class="align-center" src="images/2019-10-14/003-proxy-clip-environment.png" /&gt;
+&lt;/div&gt;
+&lt;div class="section" id="testing"&gt;
+&lt;h2&gt;Testing&lt;/h2&gt;
+&lt;p&gt;When selecting proxy clip in the clip preview. During clip encoding Video Engine Utilization in nvidia-settings should be between 60%-100%&lt;/p&gt;
+&lt;img alt="Typical gpu utilization when encoding proxies" class="align-center" src="images/2019-10-14/004-gpu-utilization.png" /&gt;
+&lt;/div&gt;
+</content><category term="kdenlive"></category><category term="video editing"></category></entry><entry><title>Fear Of Missing Out as a business model for Facebook</title><link href="https://avolkov.github.io/fear-of-missing-out-as-a-business-model-for-facebook.html" rel="alternate"></link><published>2018-11-22T16:50:00-05:00</published><updated>2018-11-22T16:50:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2018-11-22:/fear-of-missing-out-as-a-business-model-for-facebook.html</id><summary type="html">&lt;p&gt;I have written this post back in September, but didn't get arount to posting it now.&lt;/p&gt;
+&lt;p&gt;I  quit twitter back in September, when I finally I got convinced that twitter managed to find business model where they convert human misery into money.&lt;/p&gt;
+&lt;p&gt;I'm a member of the board of a …&lt;/p&gt;</summary><content type="html">&lt;p&gt;I have written this post back in September, but didn't get arount to posting it now.&lt;/p&gt;
+&lt;p&gt;I  quit twitter back in September, when I finally I got convinced that twitter managed to find business model where they convert human misery into money.&lt;/p&gt;
+&lt;p&gt;I'm a member of the board of a Linux users group in Toronto and during the meeting in September I raised a question about having presence on such user-hostile social media platforms but I was given a good counter-argument that it is how people find out about our events and mailing list. So I decided to give it another changes and post a few things on often-neglected facebook page.&lt;/p&gt;
+&lt;p&gt;I'm an administrator of our brand account page and facebook has been nagging me about 'writing a post' every week or so.&lt;/p&gt;
+&lt;img alt="Messages from facebook saying I should post something on brand account" class="align-center" src="images/2018-09-07/facebook_nag_content_fb.png" /&gt;
+&lt;p&gt;When I don't click on those messages they send me emails.&lt;/p&gt;
+&lt;img alt="Emails from facebook saying I should post something on brand account" class="align-center" src="images/2018-09-07/facebook_nag_content_email.png" /&gt;
+&lt;p&gt;I decided to try and put some effort in having presence. Instead of the usual posting links with minimal description, I started writing a post about our upcoming event. facebook suggested for the post to be turned into a calendar event and I followed the suggestion.&lt;/p&gt;
+&lt;img alt="Posts will not show up in users timeline unless you pay for 'boost'" src="images/2018-09-07/facebook_post_boost.png" /&gt;
+&lt;img alt="Top of the page event boost" src="images/2018-09-07/facebook_event_boost.png" /&gt;
+&lt;img alt="Mid page event boost" src="images/2018-09-07/facebook_event_boost_2.png" /&gt;
+&lt;p&gt;My experience doing this wasn't all that stellar -- Facebook was very helpful with putting 'Boost' button next to 'Post'; if you really want anyone to see this even at all, you will need to boost your event.&lt;/p&gt;
+&lt;p&gt;When creating an event, it's plainly laid out that whatever you have to say will not show up in users timeline unless users are specifically looking for it.&lt;/p&gt;
+&lt;img alt="Reached is a euphemism" src="images/2018-09-07/facebook_post_boost_reached.png" /&gt;
+&lt;p&gt;facebook also likes to show me how many people were 'reached', which is a euphemism for the number of people who were actually 'shown' the event, and that number was less than 10% of the people who subscribed. Of course when I post links to our videos the number is around 30% -- so the policy there is to let the users see the content, but if a page promotes any kind of thing where some users might participate, the business has to pay for the people to show up.&lt;/p&gt;
+&lt;p&gt;After I created the event the marketing algorithm kicked in, and the person who wrote the algorithm did their best to sent another customer through a funnel, so I kept getting emails with a simple message -- &amp;quot;Let up to 15000 people see your event for only $20&amp;quot;.&lt;/p&gt;
+&lt;img alt="Facebook asking for $20 to show my event to 15000 people via email" src="images/2018-09-07/facebook_marketing_nag_email.png" /&gt;
+&lt;p&gt;This was an excuse for it to send me email every day leading up to event, and this is how facebook feeds on your insecurity, every day it will email you saying -- &amp;quot;Are you sure people show up? Pay us $20 and reach up to 15000 people.&amp;quot; The message crafted to be as inoffensive as it is persuasive.&lt;/p&gt;
+&lt;p&gt;Since facebook didn't get any satisfaction from me via email, they added the same notification with the same message whenever I logged in with my personal account.&lt;/p&gt;
+&lt;img alt="Facebook asking for $20 to show my event to 15000 people via facebook event notification." src="images/2018-09-07/facebook_marketing_nag_fb.png" /&gt;
+&lt;p&gt;Event notification haven't had any meaning for a very long time -- and if I wanted to keep them useful I would have to constantly update my privacy settings, or I would be notified about my friend's brother's father's uncle's dog's walkies. This was done to increase 'engagement' to make us feel like something important is happening and everyone would keep checking facebook, now the same technique is used to extract money from people.&lt;/p&gt;
+&lt;p&gt;As the event approached facebook kept hammering me with messages whenever I logged in.&lt;/p&gt;
+&lt;img alt="other people promoting things on facebook. Be like other people" src="images/2018-09-07/facebook_nag_be_like_other_people.png" /&gt;
+&lt;img alt="more nagging in my timeline" src="images/2018-09-07/facebook_nag_my_timeline.png" /&gt;
+&lt;p&gt;I understand what is going on behind these constant messaging and I would delete those messages, but this got me thinking about how this affects others, like a the person who doesn't know these details and when these messages are effective. The messages crafted to people feel inadequate, isolated and compel in strongest terms to give up the money to have that small bit of social connection and hope that everything is going to be fine and things are going to work out.&lt;/p&gt;
+&lt;p&gt;Based on these facts I've become convinced that by just doing nothing and staying on those platforms I collaborate with these awful enterprises, I know what is going on.
+If I do nothing, I will remain as the leverage, for the likes of facebook and twitter, to keep people on their services; where they would extract profits by tormenting the people who aren't aware of what is going on.&lt;/p&gt;
+&lt;p&gt;In the short term, changing brand account to a community would prevent me getting bombarded by constant facebook nagging, but in the long term, promoting alternative ways of interacting with people, like adding pinned pages with contact information when no corporation stands as a middleman is a way to go. This may not give immediate result but at least when someone is interested in what I have to say, they would be aware that one of the things I have to say -- don't use facebook.&lt;/p&gt;
+&lt;p&gt;Useful alternatives for me seems to be mastodon -- as an alternative to twitter; moderated mailing lists with Code of Conduct -- for general discussion.&lt;/p&gt;
+</content><category term="facebook"></category><category term="surveillance capitalism"></category></entry><entry><title>Simple threading in Python 3</title><link href="https://avolkov.github.io/simple-threading-in-python-3.html" rel="alternate"></link><published>2018-08-13T00:00:00-04:00</published><updated>2018-08-13T00:00:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2018-08-13:/simple-threading-in-python-3.html</id><summary type="html">&lt;p&gt;I've been working in Python 3 on an an embarrassingly parallel task of parsing and importing data into Postgres. Once I've done single-threaded implementation I looked around for parallelizing the program and after a few tries I managed to get everything running in parallel.&lt;/p&gt;
+&lt;p&gt;This is a quick note on …&lt;/p&gt;</summary><content type="html">&lt;p&gt;I've been working in Python 3 on an an embarrassingly parallel task of parsing and importing data into Postgres. Once I've done single-threaded implementation I looked around for parallelizing the program and after a few tries I managed to get everything running in parallel.&lt;/p&gt;
+&lt;p&gt;This is a quick note on how to get a thread pool working in Python 3.6&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;concurrent.futures&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;ThreadPoolExecutor&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;data_source&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;Fetch data to be processed in parallel&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class="c1"&gt;# Implement fetching data&lt;/span&gt;
+    &lt;span class="k"&gt;yield&lt;/span&gt; &lt;span class="n"&gt;item&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;process_data&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;input_value&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;Process data without modifying input&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class="c1"&gt;# Implement saving data to postgres&lt;/span&gt;
+
+
+&lt;span class="n"&gt;MAX_THREADS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;8&lt;/span&gt;
+&lt;span class="n"&gt;pool&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ThreadPoolExecutor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MAX_THREADS&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;data_source&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="n"&gt;pool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;submit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;process_data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the code block above, &lt;strong&gt;data_source&lt;/strong&gt; function is an iterator that generates one &lt;strong&gt;value&lt;/strong&gt; at a time. &lt;strong&gt;pool.submit&lt;/strong&gt; calls &lt;strong&gt;process_data&lt;/strong&gt; with &lt;strong&gt;value&lt;/strong&gt; as a parameter of &lt;strong&gt;process_data&lt;/strong&gt; in parallel until thread pool limited in size by &lt;strong&gt;MAX_THREADS&lt;/strong&gt; is exhausted, then the program waits for a thread to become available and fetches the next value, until &lt;strong&gt;data_sources&lt;/strong&gt; generator is exhausted.&lt;/p&gt;
+&lt;p&gt;In this example &lt;strong&gt;pool.submit&lt;/strong&gt; passes single parameter &lt;strong&gt;value&lt;/strong&gt; to &lt;strong&gt;process_data&lt;/strong&gt;, but &lt;strong&gt;pool.submit&lt;/strong&gt; can pass any number of parameters required for the callee function i.e.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;pool_submit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;callee_func&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;callee_param_1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;callee_param_n&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;...&lt;/span&gt; &lt;span class="n"&gt;callee_param_n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I really like this threading implementation because it's really simple, there's no need to write any code to manage threading pool, single- and multi- threaded implementation can live side-by-site if there's ever a need to debug any logic in &lt;em&gt;process_data&lt;/em&gt; function.&lt;/p&gt;
+&lt;p&gt;Still this threading library implemented in python, whic is not true threading and multi-threaded code is a subject of Global Interpreter Lock so the CPU-bound tasks will not benefit from this.&lt;/p&gt;
+&lt;p&gt;ThreadPoolExecutor documentation -- &lt;a class="reference external" href="https://docs.python.org/3/library/concurrent.futures.html"&gt;https://docs.python.org/3/library/concurrent.futures.html&lt;/a&gt;&lt;/p&gt;
+</content><category term="python"></category><category term="multithreading"></category></entry><entry><title>Quick gitlab runner setup</title><link href="https://avolkov.github.io/quick-gitlab-runner-setup.html" rel="alternate"></link><published>2018-05-01T00:00:00-04:00</published><updated>2018-05-01T00:00:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2018-05-01:/quick-gitlab-runner-setup.html</id><summary type="html">&lt;p class="first last"&gt;gitlab-runner setup for simple ci configuration&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;Gitlab runner is a continuous integration tool that I've found it to be a lot easier than Jenkins to wrap my head around when it comes to deploying source code to demo machines.&lt;/p&gt;
+&lt;p&gt;In this scenario gitlab runner it pulls per-project source code to a runner machine then executes any of the commands specified in &lt;cite&gt;.gitlab-ci.yml&lt;/cite&gt; from source code root directory.&lt;/p&gt;
+&lt;p&gt;Here's a sample configuration of updating source code on buildout-based Plone 5 project:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;stages:
+  - deploy
+001 stop plone server:
+  stage: deploy
+  script:
+    - ./bin/supervisorctl shutdown
+  cache:
+    paths:
+      - .installed.cfg
+      - bin/*
+      - develop-eggs/*
+      - downloads/*
+      - eggs/*
+      - parts/*
+      - var/*
+002 rebuild project:
+  stage: deploy
+  script:
+    - ./bin/buildout -v -c buildout_prod.cfg
+    - ./bin/supervisord
+  cache:
+    paths:
+      - .installed.cfg
+      - bin/*
+      - develop-eggs/*
+      - downloads/*
+      - eggs/*
+      - parts/*
+      - var/*
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I've been repeating a task of installing a runner for a particular projects -- setting up a gitlab runner, and I've found it to be spread over at least 3 documents:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://docs.gitlab.com/runner/install/linux-repository.html"&gt;Install GitLab Runner using the official GitLab repositories&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://docs.gitlab.com/runner/register/index.html"&gt;Registering runners&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://docs.gitlab.com/runner/commands/README.html"&gt;Gitlab Runner commands&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;To get runner installed and registered, the following steps should be taken:&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;Add gitlab-runner repo&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;CentOS 7&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | sudo bash
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Debian&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="2"&gt;
+&lt;li&gt;Install gitlab-runner package&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;CentOS 7&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# yum install gitlab-runner
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Debian&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# apt-get install gitlab-runner
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="3"&gt;
+&lt;li&gt;Remove default gitlab-runner configuration (as root) and run it as a selected user. This step is not required if you're using default configuration, but in my case I have already setup environment for user 'alex' and it is a lot easier to run jobs there.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# gitlab-runner uninstall
+# gitlab-runner install --working-directory=/home/alex --user=alex
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="4"&gt;
+&lt;li&gt;Register gitlab runner with a gitlab server&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# gitlab-runner register
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For the last step the registration information is found in &lt;cite&gt;&amp;lt;gitlab server&amp;gt;/admin/runners&lt;/cite&gt;&lt;/p&gt;
+&lt;img alt="gitlab runner token info" class="align-center" src="images/0005_gitab_ci_runner.png" style="width: 600px;" /&gt;
+&lt;p&gt;This document provides instructions on how to lock shared runners to specific projects -- &lt;a class="reference external" href="https://docs.gitlab.com/ee/ci/runners/"&gt;https://docs.gitlab.com/ee/ci/runners/&lt;/a&gt;&lt;/p&gt;
+</content><category term="gitlab"></category><category term="git"></category><category term="plone"></category><category term="gitlab ci"></category><category term="ci"></category></entry><entry><title>Upgrading from old version of Gitlab CE</title><link href="https://avolkov.github.io/upgrading-from-old-version-of-gitlab-ce.html" rel="alternate"></link><published>2018-02-21T00:00:00-05:00</published><updated>2018-02-21T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2018-02-21:/upgrading-from-old-version-of-gitlab-ce.html</id><summary type="html">&lt;p&gt;I've came across an old instance of Gitlab running on CentOS 6.&lt;/p&gt;
+&lt;p&gt;The old instance version is 8.10.5 installed using omnibus package. The omnibus package contains Postgres database, which needs to be updated from 9.2.x used in 8.10 release to 9.6.x used in …&lt;/p&gt;</summary><content type="html">&lt;p&gt;I've came across an old instance of Gitlab running on CentOS 6.&lt;/p&gt;
+&lt;p&gt;The old instance version is 8.10.5 installed using omnibus package. The omnibus package contains Postgres database, which needs to be updated from 9.2.x used in 8.10 release to 9.6.x used in the current Gitlab 10.4.4.&lt;/p&gt;
+&lt;p&gt;The documentation is not entirely complete, as I be not many people are running Gitlab instance from 2015 that hasn't been updated. There are few mentions of gitlab-ctl pg-upgrade command but the command is not available in Gitlab 8.10.5, trying to run that will provoke gitlab-ctl to give the following response -- &amp;quot;i don't know that command&amp;quot;&lt;/p&gt;
+&lt;p&gt;What I eventually figured out, and what needs to be done is to update to version 9.5.10 first -- that would update included postgres to 9.6.x&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# yum install gitlab-ce-9.5.10-ce.0.el6.x86_64.rpm
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then update gitlab to the latest version.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# yum install gitlab-ce
+&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="section" id="additional-notes"&gt;
+&lt;h2&gt;Additional notes&lt;/h2&gt;
+&lt;p&gt;If you need to test backups for an old version of Gitlab, you can download and install that version of the package from here -- &lt;a class="reference external" href="https://packages.gitlab.com/app/gitlab/gitlab-ce/search?filter=rpms&amp;amp;q=gitlab-ce-8.10&amp;amp;dist="&gt;https://packages.gitlab.com/app/gitlab/gitlab-ce/search?filter=rpms&amp;amp;q=gitlab-ce-8.10&amp;amp;dist=&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;The package description for the specific package I'm using is here -- &lt;a class="reference external" href="https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/6/gitlab-ce-8.10.5-ce.0.el6.x86_64.rpm"&gt;https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/6/gitlab-ce-8.10.5-ce.0.el6.x86_64.rpm&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;The page also contains installation instructions. Once download and install is finished, run reconfigure script.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# gitlab-ctl reconfigure
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The script will create the location /var/opt/gitlab/backups/ into which Gitlab backup files should be copied&lt;/p&gt;
+&lt;p&gt;Restore gitlab from backup using the following command&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# gitlab-rake gitlab:backup:restore
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then reboot the system. This should get you to the point where it is possible to test Gitlab upgrade process.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="gpg-error"&gt;
+&lt;h2&gt;GPG error&lt;/h2&gt;
+&lt;p&gt;Older version of Gitlab ship with unsigned packages and yum install command would refuse to run returning this error message -- &amp;quot;Package is not signed&amp;quot;.&lt;/p&gt;
+&lt;p&gt;A workaround is to set gpgcheck=0 in /etc/yum.repos.d/gitlab_gitlab-ce.repo&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="git gitlab"></category></entry><entry><title>Installing python packages in development mode</title><link href="https://avolkov.github.io/installing-python-packages-in-development-mode.html" rel="alternate"></link><published>2017-01-02T00:00:00-05:00</published><updated>2017-01-02T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2017-01-02:/installing-python-packages-in-development-mode.html</id><summary type="html">&lt;p class="first last"&gt;installing package requirements in development mode&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;When working on a python project with several dependencies, sometimes I want to see what's going on in one of the required packages. I don't use IDEs so the preferred method of debugging code inside of package dependencies is to grep for an entry point to that package inside of virtualenv, open the source file, add a debug point and re-run test suite or a script until the code hits the debug point. Figuring out what is the actual problem left as an exercise to the reader.&lt;/p&gt;
+&lt;p&gt;The main issue with the approach above is that when debug console gets activated, it doesn't print out any source code surrounding the debug point, I have to constantly switch between source editor and console hoping that the line printed out in the console matches file lines open in the editor.&lt;/p&gt;
+&lt;p&gt;A better approach is to clone the source package in question and then install it in the current virtual environment with regular install command.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(myproj)$ python setup.py develop
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This solves the immediate problem of debugger not printing line numbers, instead of poking inside of files under virtualenv it's possible to open the files from cloned location. The drawback of this approach is that it still involves a few steps -- I need to figure out where the source package is located, clone it, then run the command.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(myproj)$ pip install -e .
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I've been using command above as an alias for &lt;strong&gt;python setup.py develop&lt;/strong&gt; for a while and assumed it's magical properties for that purpose, however these days pip automates a lot more. According to the man page of version 9.0.1, any path/url can be passed to the command.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;-e,--editable &amp;lt;path/url&amp;gt;
+Install a project in editable mode (i.e. setuptools &amp;quot;develop mode&amp;quot;) from a local project path or a VCS url.
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;As well as installing any packages in development mode from local repositories, it's possible to install any remote packages from VCS, since pretty much any project on pypi has link to VCS this becomes a two step process:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Lookup package name on pypi.python.org, and copy link to VCS&lt;/li&gt;
+&lt;li&gt;run &lt;strong&gt;pip install -e &amp;lt;copied_link&amp;gt;&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="section" id="resources"&gt;
+&lt;h2&gt;Resources&lt;/h2&gt;
+&lt;p&gt;Debian man page for PIP --  &lt;a class="reference external" href="https://manpages.debian.org/cgi-bin/man.cgi?query=pip&amp;amp;apropos=0&amp;amp;sektion=0&amp;amp;manpath=Debian+8+jessie&amp;amp;format=html&amp;amp;locale=en"&gt;https://manpages.debian.org/cgi-bin/man.cgi?query=pip&amp;amp;apropos=0&amp;amp;sektion=0&amp;amp;manpath=Debian+8+jessie&amp;amp;format=html&amp;amp;locale=en&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Pip Reference Guide | Pip Install | VCS Support section -- &lt;a class="reference external" href="https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support"&gt;https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Automating entry function definition lookup with Sublime Text &amp;amp; Anaconda -- &lt;a class="reference external" href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html"&gt;https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="python"></category><category term="pip"></category></entry><entry><title>Pyramid web app setup with with Postgres, SQLAlchemy and Alembic.</title><link href="https://avolkov.github.io/pyramid-web-app-setup-with-with-postgres-sqlalchemy-and-alembic.html" rel="alternate"></link><published>2017-01-01T00:00:00-05:00</published><updated>2017-01-01T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2017-01-01:/pyramid-web-app-setup-with-with-postgres-sqlalchemy-and-alembic.html</id><summary type="html">&lt;p class="first last"&gt;Pyramid web app setup with with Postgres, SQLAlchemy and Alembic.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;This is how I set up a sample web application in development mode using Pyramid 1.7.3, Python 3.x and Postgres 9.x using SQLAlchemy to manage database abstraction and Alembic to manage migrations.&lt;/p&gt;
+&lt;div class="section" id="set-up-pyramid-environment"&gt;
+&lt;h2&gt;1. Set up pyramid environment&lt;/h2&gt;
+&lt;p&gt;Create Python 3 virtual environment then install cookiecutter -- a command line utility for creating and managing project templates.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ mkvirtualenv --python `which python3` pyramid-test
+$ pip install cookiecutter
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="create-pyramid-project-w-sqlalchemy-using-cookiecutter"&gt;
+&lt;h2&gt;2. Create pyramid project w SQLAlchemy using cookiecutter&lt;/h2&gt;
+&lt;p&gt;I'm using the official cookiecutter template from Pylons for Pyramid project with SQLAlchemy ORM and SQLite. Later in the setup, the project settings will be modified for SQLAlchemy to work with Postgres.&lt;/p&gt;
+&lt;p&gt;When presented &lt;strong&gt;'project_name[Pyramid Scaffold]'&lt;/strong&gt; question in cookicutter setup dialog, specify &lt;strong&gt;pyramid_test&lt;/strong&gt; as the name of the project, or the default project name -- 'Pyramid Scaffold' will be used.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(pyramid-test)$ cookiecutter https://github.com/Pylons/pyramid-cookiecutter-alchemy
+project_name [Pyramid Scaffold]: pyramid_test
+repo_name [scaffold]:
+
+===============================================================================
+Documentation: http://docs.pylonsproject.org/projects/pyramid/en/latest/
+Tutorials:     http://docs.pylonsproject.org/projects/pyramid_tutorials/en/latest/
+Twitter:       https://twitter.com/trypyramid
+Mailing List:  https://groups.google.com/forum/#!forum/pylons-discuss
+Welcome to Pyramid.  Sorry for the convenience.
+==========================================================================
+Change directory into your newly created project.
+cd scaffold
+Create a Python virtual environment.
+python3 -m venv env
+
+Upgrade packaging tools.
+env/bin/pip install --upgrade pip setuptools
+Install the project in editable mode with its testing requirements.
+env/bin/pip install -e &amp;quot;.[testing]&amp;quot;
+Configure the database:
+env/bin/initialize_scaffold_db development.ini
+Run your project&amp;#39;s tests.
+env/bin/pytest
+Run your project.
+env/bin/pserve development.ini
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="install-all-project-dependencies"&gt;
+&lt;h2&gt;4. Install all project dependencies&lt;/h2&gt;
+&lt;p&gt;Install psycopg2 and alembic python packages, by editing &lt;strong&gt;setup.py&lt;/strong&gt; and adding package dependency to &lt;strong&gt;requires&lt;/strong&gt; list.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;requires&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="s1"&gt;&amp;#39;psycopg2&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="s1"&gt;&amp;#39;alembic&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;psycopg2 -- Postgres database driver that lets SQLAlchemy connect to postgres database&lt;/li&gt;
+&lt;li&gt;alembic --  a database migration tool for SQLAlchemy.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The following command install all dependencies specified in 'requirements' section in &lt;strong&gt;setup.py&lt;/strong&gt; all requirements for setting up pyramid framework and related dependencies are specified there.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(pyramid-test)$ pip install -e .
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To verify that the packages were install run the following command that lists installed python packages and make sure psycopg2 and alembic are mentioned&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(pyramid-test)$ pip freeze
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="setup-postgres-db"&gt;
+&lt;h2&gt;3. Setup postgres db&lt;/h2&gt;
+&lt;p&gt;This step assumes you already installed Postgres 9.x and able to log in as 'postgres' admin user. This setup has been used on Debian systems, but with minor differences in configuration file locations should apply to any Linux distribution.&lt;/p&gt;
+&lt;p&gt;Get access to postgres admin shell.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# su postgres
+$ psql
+postgres=#
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Create a user and a database for this project. Here I'm using username 'alex', change username according to your local system username -- this will come in handy when setting up peer authentication.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;postgres=# CREATE USER alex WITH PASSWORD &amp;#39;secret&amp;#39;;
+postgres=# CREATE DATABASE pyramidtest OWNER alex;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;From root console edit &lt;strong&gt;/etc/postgresql/9.x/main/pg_hba.conf&lt;/strong&gt; add the following lines at the bottom of the file -- these are declarations for postgres server to allow peer and password authentication.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;local   postgrestest    alex                                    peer
+host    postgrestest    alex            127.0.0.1               md5
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Restart postgres db.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# service postgresql restart
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="connect-to-postgresdb-from-pyramid-project"&gt;
+&lt;h2&gt;4. Connect to postgresdb from pyramid project&lt;/h2&gt;
+&lt;p&gt;Edit development.ini, updating sqlalchemy.url to the following&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sqlalchemy.url = postgresql:///pyramidtest
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This config line lets pyramid project connect to postgres via unix socket using 'peer' authentication -- the database engine will verify that the name of system account that attempts to log in, matches the name of owner account of the database.
+When 'peer' authentication is used, Postgres doesn't verify the password set with 'CREATE USER..' command.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="configure-alembic-to-manage-migrations"&gt;
+&lt;h2&gt;5. Configure alembic to manage migrations&lt;/h2&gt;
+&lt;p&gt;I use alembic to make sure that the project is able to connect to the database and execute its initial migration. Alembic retrieves SQLAlchemy model definitions from &lt;strong&gt;/models/&lt;/strong&gt; folder and create appropriate tables in Postgres database.&lt;/p&gt;
+&lt;p&gt;Add alembic to one of project requirements in &lt;strong&gt;setup.py&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;requires&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="s1"&gt;&amp;#39;alembic&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then re-install the dependencies.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(pyramid-test)$ pip install -e .
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Initialize alembic for the project. This creates &lt;strong&gt;/alembic/&lt;/strong&gt; subdirectory and populates it with initial configuration.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(pyramid-test)$ alembic init alembic
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In &lt;strong&gt;alembic.ini&lt;/strong&gt; update &lt;strong&gt;sqlalchemy.url&lt;/strong&gt; variable to the same &lt;strong&gt;sqlalchemy.url&lt;/strong&gt; value set in &lt;strong&gt;development.ini&lt;/strong&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sqlalchemy.url = postgresql:///pyramidtest
+&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="section" id="configure-alembic-to-autogenerate-migrations"&gt;
+&lt;h3&gt;Configure alembic to autogenerate migrations&lt;/h3&gt;
+&lt;p&gt;In &lt;strong&gt;alembic/env.py&lt;/strong&gt; import base metadata from project model from &lt;strong&gt;/models/meta.py&lt;/strong&gt; file, and assign it to &lt;strong&gt;target_metadata&lt;/strong&gt;, so alembic knows which models it has to keep track of.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;pyramid_test.models.meta&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;Base&lt;/span&gt;
+&lt;span class="n"&gt;target_metadata&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Base&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;metadata&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Generate migrations.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ alembic revision --autogenerate -m &amp;quot;Initial Commit&amp;quot;
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.autogenerate.compare] Detected added table &amp;#39;models&amp;#39;
+INFO  [alembic.autogenerate.compare] Detected added index &amp;#39;my_index&amp;#39; on &amp;#39;[&amp;#39;name&amp;#39;]&amp;#39;
+  Generating /home/alex/gitlab/pyramid_test/alembic/versions/2e0b2d81bfbb_initial_commit.py ... done
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The migration script is based on database models in &lt;strong&gt;/models/mymondel.py&lt;/strong&gt;, that already has sample model defined by cookiecutter template, see code below.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;sqlalchemy&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="n"&gt;Column&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;Index&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;Integer&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;Text&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;.meta&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;Base&lt;/span&gt;
+
+
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MyModel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Base&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;__tablename__&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;models&amp;#39;&lt;/span&gt;
+    &lt;span class="nb"&gt;id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Column&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Integer&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;primary_key&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Column&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Text&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;value&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Column&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Integer&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="n"&gt;Index&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;my_index&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;MyModel&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;unique&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;mysql_length&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;255&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Migration script containing a sequence of SqlAlchemy (sa) is generated  by alembic and place in a file with the format &lt;strong&gt;[alembic_hash]_initial_commit.py&lt;/strong&gt; under &lt;strong&gt;/alembic/versions/&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Inside the migration file, &lt;strong&gt;upgrade&lt;/strong&gt; function defines database upgrade migration, optional &lt;strong&gt;downgrade&lt;/strong&gt; function defines rollback operations.&lt;/p&gt;
+&lt;p&gt;The following is a short excerpt from the migration of pyramid-test project.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;upgrade&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="c1"&gt;# ### commands auto generated by Alembic - please adjust! ###&lt;/span&gt;
+    &lt;span class="n"&gt;op&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;create_table&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;models&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;sa&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Column&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;sa&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Integer&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;nullable&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;False&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="n"&gt;sa&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Column&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;name&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;sa&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Text&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;nullable&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="n"&gt;sa&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Column&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;value&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;sa&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Integer&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;nullable&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="n"&gt;sa&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;PrimaryKeyConstraint&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;op&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;pk_models&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;op&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;create_index&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;my_index&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;models&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;name&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="n"&gt;unique&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;mysql_length&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;255&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="c1"&gt;# ### end Alembic commands ###&lt;/span&gt;
+
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;downgrade&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="c1"&gt;# ### commands auto generated by Alembic - please adjust! ###&lt;/span&gt;
+    &lt;span class="n"&gt;op&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;drop_index&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;my_index&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;table_name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;models&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;op&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;drop_table&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;models&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="c1"&gt;# ### end Alembic commands ###&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For more details see -- &lt;a class="reference external" href="http://alembic.zzzcomputing.com/en/latest/autogenerate.html#auto-generating-migrations"&gt;http://alembic.zzzcomputing.com/en/latest/autogenerate.html#auto-generating-migrations&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="apply-alembic-migrations"&gt;
+&lt;h2&gt;6 Apply alembic migrations&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(pyramid-test)$ alembic upgrade head
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -&amp;gt; 2e0b2d81bfbb, Initial Commit
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This will create two tables in postgrestest database.&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;alembic_version -- keeps track of database versioning for alembic&lt;/li&gt;
+&lt;li&gt;models -- model defined in &lt;strong&gt;/models/mymodel.py&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;See screenshot below as the contend of the database is displayed in pgadminIII&lt;/p&gt;
+&lt;img alt="The result of alembic migration, in Pgadmin3" src="images/0004_alembic_migrations.png" /&gt;
+&lt;/div&gt;
+&lt;div class="section" id="perform-test-write-to-the-database"&gt;
+&lt;h2&gt;7 Perform test write to the database&lt;/h2&gt;
+&lt;p&gt;To verify that the database is set up correctly, create a sample object and commit it to the database using Pyramid Shell. The sample code is based on
+&lt;strong&gt;scripts/initialize.db&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(pyramid-test)$ pshell development.ini
+&amp;gt;&amp;gt;&amp;gt; from pyramid_test.models.mymodel import MyModel
+&amp;gt;&amp;gt;&amp;gt; db = request.dbsession
+&amp;gt;&amp;gt;&amp;gt; obj_one = MyModel(name=&amp;#39;one&amp;#39;, value=1)
+&amp;gt;&amp;gt;&amp;gt; db.add(obj_one)
+&amp;gt;&amp;gt;&amp;gt; request.tm.commit()
+&amp;gt;&amp;gt;&amp;gt; db.flush()
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To retrieve newly created object from the database, run the following commands.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(pyramid-test)$ pshell development.ini
+&amp;gt;&amp;gt;&amp;gt; from pyramid_test.models.mymodel import MyModel
+&amp;gt;&amp;gt;&amp;gt; db = request.dbsession
+&amp;gt;&amp;gt;&amp;gt; mymodel = db.query(MyModel).one()
+&amp;gt;&amp;gt;&amp;gt; print(mymodel)
+&amp;lt;pyramid_test.models.mymodel.MyModel object at 0x7fce6d83ceb8&amp;gt;
+&amp;gt;&amp;gt;&amp;gt; print(mymodel.name)
+one
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The object now persists in the database.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="run-the-server"&gt;
+&lt;h2&gt;8 Run the server&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(pyramid-test)$ pserve develoment.ini
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Open a web browser and go to &lt;strong&gt;http://localhost:6543/&lt;/strong&gt; you will be greeted with pyramid demo message.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="sample-code"&gt;
+&lt;h2&gt;9 Sample Code&lt;/h2&gt;
+&lt;p&gt;Sample code for the project located in -- &lt;a class="reference external" href="https://github.com/avolkov/pyramid-test"&gt;https://github.com/avolkov/pyramid-test&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="python"></category><category term="pyramid"></category><category term="postgres"></category><category term="sqlalchemy"></category><category term="alembic"></category></entry><entry><title>Grapical tool for mercurial similar to git blame</title><link href="https://avolkov.github.io/grapical-tool-for-mercurial-similar-to-git-blame.html" rel="alternate"></link><published>2016-12-17T00:00:00-05:00</published><updated>2016-12-17T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-12-17:/grapical-tool-for-mercurial-similar-to-git-blame.html</id><summary type="html">&lt;p class="first last"&gt;thg -- A handy GUI tool for looking up historical date&lt;/p&gt;
+</summary><content type="html">&lt;img alt="Repository explorer screenshot" class="align-center" src="https://screenshots.debian.net/screenshots/000/011/445/large.png" style="width: 600px; height: 630px;" /&gt;
+&lt;p&gt;Git has unfortunately-named nevertheless handy tool for exploring historical file data -- &lt;strong&gt;git blame&lt;/strong&gt;. There's an alternative GUI implementation for Mercurial &lt;strong&gt;thg annotate&lt;/strong&gt;, a part of Tortoise Hg suite.&lt;/p&gt;
+&lt;p&gt;Annotate tool works exactly the same as blame, just specify a file name i.e. &lt;strong&gt;thg annotate setup.py&lt;/strong&gt; and a window will pop up with revision list, diff and annotate options.&lt;/p&gt;
+&lt;p&gt;Right-clicking on diff window and selecting &lt;strong&gt;Annotate Options&lt;/strong&gt; brings up possible annotation selection that for some reason aren't selected by default: 'Show Author', 'Show Date' and 'Show Revision'.&lt;/p&gt;
+&lt;p&gt;StackOverflow discussion -- &lt;a class="reference external" href="http://stackoverflow.com/questions/2228188/finding-the-author-of-a-line-of-code-in-mercurial"&gt;http://stackoverflow.com/questions/2228188/finding-the-author-of-a-line-of-code-in-mercurial&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Debian Package (stretch) -- &lt;a class="reference external" href="https://packages.debian.org/stretch/tortoisehg"&gt;https://packages.debian.org/stretch/tortoisehg&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Project Page -- &lt;a class="reference external" href="https://www.mercurial-scm.org/wiki/TortoiseHg"&gt;https://www.mercurial-scm.org/wiki/TortoiseHg&lt;/a&gt;&lt;/p&gt;
+</content><category term="python"></category><category term="mercurial"></category><category term="hg"></category><category term="tools"></category></entry><entry><title>Testing Python with Mock</title><link href="https://avolkov.github.io/testing-python-with-mock.html" rel="alternate"></link><published>2016-12-17T00:00:00-05:00</published><updated>2016-12-17T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-12-17:/testing-python-with-mock.html</id><summary type="html">&lt;p class="first last"&gt;Testing with mocks and less well know mock methods&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="preamble"&gt;
+&lt;h2&gt;Preamble&lt;/h2&gt;
+&lt;p&gt;In the past few months I've been fortunate enough to write code using TDD. There a brief outline of my experiences using python Mock library help with adding test coverage for the code which is hard to test.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="lessons-learned-from-using-mock"&gt;
+&lt;h2&gt;Lessons learned from using mock&lt;/h2&gt;
+&lt;p&gt;Mocking internals of your application is hard, mostly because of dependencies on the other parts of the program, in this case object should be mocked if there is no other choice -- a much better approach is to just create object instances, this is especially true when creating database-backed objects. Integration tests of real database-backed object will verify application logic, as well as database relationships.&lt;/p&gt;
+&lt;p&gt;Mocks, however, are perfect when faking third party API responses -- there's no application interdependencies to be aware of, the test suite allows to execute code as is, without relying on third-party services or sending any data out, it codifies third party API responses as they are used by your application -- the latter point is especially helpful when a third party API changes between the releases, and any unexpected errors raised after an upgrade, can be quickly identified.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="knowing-where-to-inject-mock-object"&gt;
+&lt;h2&gt;Knowing where to inject mock object&lt;/h2&gt;
+&lt;p&gt;The most challenging part of mocking an object is to figure out where to inject a mocked object. The object needs to be mocked whenever its imported and used an not whenever it's defined. This makes sense because the purpose of the test is to check particular code path with a mock and not to mock that object everywhere. However,  my initial assumption was to simply copy import statement from a source, which led to a lot of confusion.&lt;/p&gt;
+&lt;p&gt;In the following example, of guessing a number between 0 and 10. If the code was saved in a file &lt;strong&gt;main.py&lt;/strong&gt; with import from  &lt;strong&gt;random.randint&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;guess&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;random&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;randint&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Guessed {}&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;randint&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Mock setup for this case will have to inject randint mock object into &lt;strong&gt;main&lt;/strong&gt; program and not &lt;strong&gt;rand&lt;/strong&gt; library.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;mock&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;patch&lt;/span&gt;
+
+&lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;patch&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;main.randint&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;rnd_mock&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;main&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;guess&lt;/span&gt;
+    &lt;span class="n"&gt;guess&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;rnd_mock&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="debugging-objects-that-don-t-cooperate-with-mock"&gt;
+&lt;h2&gt;Debugging objects that don't cooperate with mock&lt;/h2&gt;
+&lt;p&gt;The second-most challenging thing about mocking objects is timing -- especially the cases where an original instance of the object gets called before mock patch ever has a chance to replace the object.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;mock&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;patch&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;foo&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;bar&lt;/span&gt;
+
+&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setup&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+&lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;patch&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;foo.bar.run&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In this particular case, going against pythonic way of importing code, keeping all the imports at the top of the file, is justified as this solves the problem, running import within patch section will do the trick.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;mock&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;patch&lt;/span&gt;
+
+&lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;patch&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;foo.bar.run&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;foo&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;bar&lt;/span&gt;
+    &lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setup&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In general there is no easy solution to this kind of problem, but a useful debugging technique would be to put a debug point before &lt;strong&gt;with&lt;/strong&gt; declaration, just inside &lt;strong&gt;with&lt;/strong&gt; declaration, and just before the declaration of the object to be mocked. Tracing the order of calls would give a good clue on what's wrong with the mock setup.&lt;/p&gt;
+&lt;p&gt;Most of the time, the problem is cause by the wrong assumption about the order of imports.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="mocked-method-call-vs-mocked-property"&gt;
+&lt;h2&gt;Mocked method call vs. mocked property&lt;/h2&gt;
+&lt;p&gt;There's a difference between calling a mocked property and a method -- it's possible to just assign the value to a property, however for a function needs to be assigned the return value to the property &lt;strong&gt;return_value&lt;/strong&gt; of that mock.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;mock&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;MagicMock&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;print_property&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+     &lt;span class="n"&gt;myobj&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;MagicMock&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+     &lt;span class="n"&gt;myobj&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;myprop&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;
+     &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;myobj&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;myprop&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;print_method&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="n"&gt;myobj&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;MagicMock&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;myobj&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;my_method&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;return_value&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;5&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;myobj&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;my_method&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the case of mocking methods calling other methods, return_value can be skipped until the very last method in the chain&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;mock&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;MagicMock&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;print_chained_method&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+     &lt;span class="n"&gt;myobj&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;MagicMock&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+     &lt;span class="n"&gt;myobj&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;last_method&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;return_value&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;42&lt;/span&gt;
+     &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;myobj&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;last_method&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="mock-helper-methods"&gt;
+&lt;h2&gt;Mock helper methods&lt;/h2&gt;
+&lt;p&gt;The following helper methods are useful when examining mocks state of how many times and with which parameters a mock was called.&lt;/p&gt;
+&lt;p&gt;See mock documentation for more info -- &lt;a class="reference external" href="https://docs.python.org/3/library/unittest.mock.html"&gt;https://docs.python.org/3/library/unittest.mock.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;method calls&lt;/strong&gt; -- a method for tracking any calls to mock objects as well as calls to their methods and attributes.&lt;/p&gt;
+&lt;p&gt;i.e. The object hasn't been called&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;mailer&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;method_calls&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;A constructor has been called with a 'Message' object&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;mailer&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;method_calls&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;call&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;pyramid_mailer&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;message&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Message&lt;/span&gt; &lt;span class="nb"&gt;object&lt;/span&gt; &lt;span class="n"&gt;at&lt;/span&gt; &lt;span class="mh"&gt;0x7fb9cae06e90&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;call_args&lt;/strong&gt; -- the arguments the mock was last called with. This method will only return arguments from the last call. To get arguments from all calls, use &lt;em&gt;call_args_list&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;call_args_list&lt;/strong&gt; -- list of the calls made to the mock objects in a sequence. Useful for figuring out the order of calls.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;call_count&lt;/strong&gt; -- the number of times mock object was called&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;mock_calls&lt;/strong&gt; -- records all calls to the mock object, its methods, magic methods and return value mocks.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="python"></category><category term="testing"></category><category term="mock"></category></entry><entry><title>Nose2 profiler setup</title><link href="https://avolkov.github.io/nose2-profiler-setup.html" rel="alternate"></link><published>2016-11-17T00:00:00-05:00</published><updated>2016-11-17T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-11-17:/nose2-profiler-setup.html</id><summary type="html">&lt;p class="first last"&gt;nose2 profiling configuration&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;Nose profiler is one of the plugins that come with nose2 but is turned off by default.&lt;/p&gt;
+&lt;p&gt;To enable profiling add the following configuration to &lt;strong&gt;unittest.cfg&lt;/strong&gt; in the root of your project.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;[unittest]&lt;/span&gt;
+&lt;span class="na"&gt;plugins&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;nose2.plugins.prof&lt;/span&gt;
+
+&lt;span class="k"&gt;[profiler]&lt;/span&gt;
+&lt;span class="na"&gt;always-on&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;False&lt;/span&gt;
+&lt;span class="na"&gt;filename&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+&lt;span class="na"&gt;restrict&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+&lt;span class="na"&gt;sort&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;cumulative&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To enable profiler during nose2 run, use the following command parameters &lt;tt class="docutils literal"&gt;nose2 &lt;span class="pre"&gt;-P&lt;/span&gt;&lt;/tt&gt; or more useful, redirect stdout and stderror into a file so profiler output can be analyzed &lt;tt class="docutils literal"&gt;nose2 &lt;span class="pre"&gt;-P&lt;/span&gt; &amp;amp;&amp;gt; perf_report.txt&lt;/tt&gt;&lt;/p&gt;
+</content><category term="python"></category><category term="testing"></category><category term="nose2"></category><category term="profiling"></category></entry><entry><title>Cricket -- awesome ugly test visualizer</title><link href="https://avolkov.github.io/cricket-awesome-ugly-test-visualizer.html" rel="alternate"></link><published>2016-11-16T00:00:00-05:00</published><updated>2016-11-16T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-11-16:/cricket-awesome-ugly-test-visualizer.html</id><summary type="html">&lt;p class="first last"&gt;Cricket, a handy GUI tool for running tests in python&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;I've been writing tests for a while and running them with nose2. One of more labor-intensive interactions with nose2 is typing out paths to individual tests. Cricket -- a part of BeeWare suite solves copying-and-pasting test name problem and provides a nice user interface to summarize results from running test suite.&lt;/p&gt;
+&lt;div class="section" id="installing-dependencies"&gt;
+&lt;h2&gt;Installing dependencies&lt;/h2&gt;
+&lt;p&gt;Cricket has a couple of system-level dependencies: IDLE editor and IDLE library and TkInter.&lt;/p&gt;
+&lt;p&gt;For Debian,&lt;/p&gt;
+&lt;p&gt;Running Cricket under Python 2.7 the following libraries need to be installed&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-get install idle idle-python2.7 python-tk
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Running Cricket Python 3.x the dependencies are&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-get install idle3 idle-python3.5 python-tk
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="installing-cricket"&gt;
+&lt;h2&gt;Installing cricket&lt;/h2&gt;
+&lt;p&gt;Cricket is installed using pip, you can install it in the existing project, or add it in setup.py as one of the dependencies.&lt;/p&gt;
+&lt;p&gt;Cricket pip page -- &lt;a class="reference external" href="https://pypi.python.org/pypi/cricket"&gt;https://pypi.python.org/pypi/cricket&lt;/a&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test)$ pip install cricket
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="running-cricket"&gt;
+&lt;h2&gt;Running cricket&lt;/h2&gt;
+&lt;p&gt;For any python project written with unittest, run &lt;strong&gt;cricket-unittst&lt;/strong&gt; for django projects, run &lt;strong&gt;cricket-django&lt;/strong&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="runnig-sample-pyramid-project-with-cricket"&gt;
+&lt;h2&gt;Runnig sample pyramid project with cricket&lt;/h2&gt;
+&lt;p&gt;Getting started with cricket -- this example of running Pyramid test under Python 3.5&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Create Python 3 virtualenv&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ mkvirtualenv cricket-test --python `which python3`
+(cricket-test) $ python -V
+Python 3.5.2+
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Pull Pyramid source code&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test) $ git clone https://github.com/Pylons/pyramid.git
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Install Pyramid dependencies&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test) $ cd pyramid/
+(cricket-test) $ pip install -e .
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Install dependencies to run tests&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test) $ pip install -e .[testing]
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Install cricket&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test) $ pip install cricket
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Run cricket&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test) $ cricket-unittest &amp;amp;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The following UI should appear. If you want to be able to use code coverage tool -- Duvet -- &lt;a class="reference external" href="https://pypi.python.org/pypi/duvet"&gt;https://pypi.python.org/pypi/duvet&lt;/a&gt;, install it with pip using the following command&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(cricket-test) $ pip install duvet
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Cricket: running all test by pressing &lt;strong&gt;Run All&lt;/strong&gt;&lt;/p&gt;
+&lt;img alt="Cricket - run all tests" class="align-center" src="images/0001_cricket_ran.png" style="width: 600px; height: 484px;" /&gt;
+&lt;p&gt;Cricket: copying single test, by selecting a test then pressing &lt;strong&gt;Run Selected&lt;/strong&gt;&lt;/p&gt;
+&lt;img alt="Cricket - ran an individual test" class="align-center" src="images/0002_cricket_individual_test.png" style="width: 600px; height: 484px;" /&gt;
+&lt;p&gt;Cricket: running a group of tests, by selecting a top-level filename or class, then pressing &lt;strong&gt;Run Selected&lt;/strong&gt;&lt;/p&gt;
+&lt;img alt="Cricket -- ran a group of tests" class="align-center" src="images/0003_cricket_ran_test_group.png" style="width: 600px; height: 484px;" /&gt;
+&lt;/div&gt;
+&lt;div class="section" id="missing-dependencies-errors"&gt;
+&lt;h2&gt;Missing dependencies errors&lt;/h2&gt;
+&lt;p&gt;If any of system packages is missing from the system the following errors will be triggered when trying to run Cricket.&lt;/p&gt;
+&lt;div class="section" id="missing-python-tkinter"&gt;
+&lt;h3&gt;Missing python-tkinter&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Traceback (most recent call last):
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/bin/cricket-unittest&amp;quot;, line 7, in &amp;lt;module&amp;gt;
+from cricket.unittest.__main__ import main
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/unittest/__main__.py&amp;quot;, line 4, in &amp;lt;module&amp;gt;
+from cricket.main import main as cricket_main
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/main.py&amp;quot;, line 13, in &amp;lt;module&amp;gt;
+from tkinter import *
+ImportError: No module named tkinter
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="missing-idle-idle-python"&gt;
+&lt;h3&gt;Missing idle / idle-python&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    Traceback (most recent call last):
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/bin/cricket-unittest&amp;quot;, line 7, in &amp;lt;module&amp;gt;
+from cricket.unittest.__main__ import main
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/unittest/__main__.py&amp;quot;, line 4, in &amp;lt;module&amp;gt;
+from cricket.main import main as cricket_main
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/main.py&amp;quot;, line 15, in &amp;lt;module&amp;gt;
+from cricket.view import (
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/cricket/view.py&amp;quot;, line 29, in &amp;lt;module&amp;gt;
+from tkreadonly import ReadOnlyText
+File &amp;quot;/home/alex/.virtualenvs/cricket-test/local/lib/python2.7/site-packages/tkreadonly.py&amp;quot;, line 15, in &amp;lt;module&amp;gt;
+&amp;quot;to work out how to install IDLE and idlelib.&amp;quot;)
+Exception: idlelib could not be found. Check your operating system instructions to work out how to install IDLE and idlelib.
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="resources"&gt;
+&lt;h2&gt;Resources&lt;/h2&gt;
+&lt;p&gt;Cricket github page -- &lt;a class="reference external" href="https://github.com/pybee/cricket"&gt;https://github.com/pybee/cricket&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Duvet github page -- &lt;a class="reference external" href="https://github.com/pybee/duvet"&gt;https://github.com/pybee/duvet&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;python.__init__ podcast: An interview with Russel Keith McGee -- &lt;a class="reference external" href="http://podcastinit.podbean.com/e/episode-64-beeware-with-russell-keith-magee/"&gt;http://podcastinit.podbean.com/e/episode-64-beeware-with-russell-keith-magee/&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="python"></category><category term="testing"></category><category term="cricket"></category></entry><entry><title>Running Jenkins in Docker</title><link href="https://avolkov.github.io/running-jenkins-in-docker.html" rel="alternate"></link><published>2016-10-28T10:19:00-04:00</published><updated>2016-10-28T10:19:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-28:/running-jenkins-in-docker.html</id><summary type="html">&lt;p class="first last"&gt;setting up jenkins in docker&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="requirements"&gt;
+&lt;h2&gt;Requirements&lt;/h2&gt;
+&lt;p&gt;I went to an FSOSS 2016 &lt;a class="footnote-reference" href="#id7" id="id1"&gt;[1]&lt;/a&gt; conference and I found one talk on Jenkins to be particularly interesting.&lt;/p&gt;
+&lt;p&gt;I wanted to try Jenkins, without configuring Java on my laptop or setting up a VM. Using Jenkins docker container would be the easiest solution for this kind of problem.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="prerequisites"&gt;
+&lt;h2&gt;Prerequisites&lt;/h2&gt;
+&lt;p&gt;This article assumes Docker &lt;a class="footnote-reference" href="#id8" id="id2"&gt;[2]&lt;/a&gt; and Docker Compose &lt;a class="footnote-reference" href="#id9" id="id3"&gt;[3]&lt;/a&gt; have been set up.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="jenkins-container"&gt;
+&lt;h2&gt;Jenkins container&lt;/h2&gt;
+&lt;p&gt;I used an official container built by Jenkins community &lt;a class="footnote-reference" href="#id10" id="id4"&gt;[4]&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The container comes with these settings:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Jenkins server runs on ports 5000 and 8000&lt;/li&gt;
+&lt;li&gt;Jenkins settings saved to &lt;strong&gt;/var/jenkins_home&lt;/strong&gt; and the directory is exposed as a docker volume&lt;/li&gt;
+&lt;li&gt;user / group ids are set to jenkins / jenkins with uid/gid set to 1001/1001.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="section" id="volume-setup"&gt;
+&lt;h2&gt;Volume Setup&lt;/h2&gt;
+&lt;p&gt;Docker volume settings, specify container directory mapping between host and container &lt;a class="footnote-reference" href="#id11" id="id5"&gt;[5]&lt;/a&gt;, allowing files generated  inside of the container to persist. The host system will store the data in &lt;strong&gt;/srv/dockercontainer/jenkins_home&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Following steps to set up docker volume and permission mapping on the host.&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;Create docker volume path on the host&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# mkdir /srv/dockercontainer/jenkins_home
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="2"&gt;
+&lt;li&gt;Set up user/group mapping on the host.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# groupadd --gid 20000 jenkins
+# useradd --home-dir /srv/dockercontainer/jenkins_home \
+   --uid 20000 --gid 20000 -s /bin/false -M jenkins
+# chown -R jenkins:jenkins /srv/dockercontainer/jenkins_home
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="docker-compose-file"&gt;
+&lt;h2&gt;Docker compose file&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;docker-compose.yml&lt;/strong&gt; specifies startup settings for Jenkins container.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nt"&gt;version&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;2&amp;#39;&lt;/span&gt;
+&lt;span class="nt"&gt;services&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;jenkins&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;image&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;jenkins&lt;/span&gt;
+    &lt;span class="nt"&gt;user&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;20000:20000&amp;quot;&lt;/span&gt;
+    &lt;span class="nt"&gt;ports&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+      &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;5000:5000&amp;quot;&lt;/span&gt;
+      &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;8080:8080&amp;quot;&lt;/span&gt;
+    &lt;span class="nt"&gt;volumes&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+      &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;/srv/dockercontainer/jenkins_home:/var/jenkins_home&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;strong&gt;image&lt;/strong&gt; -- the directive specifies container to use, in this case it's Jenkins container &lt;a class="footnote-reference" href="#id10" id="id6"&gt;[4]&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;user&lt;/strong&gt; -- user/group mapping, 'uid:gid' from the container is mapped 'uid:gid' of the host.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;ports&lt;/strong&gt; -- port mapping from the container to the host.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;volumes&lt;/strong&gt; -- directory (docker volume) mapping, between the host and the container.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="section" id="starting-up-the-container"&gt;
+&lt;h2&gt;Starting up the container&lt;/h2&gt;
+&lt;p&gt;Go to the directory containing &lt;strong&gt;docker-compose.yml&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;The following command starts the container in foreground, the container needs to be run in the foreground, as during the setup, system activation code for Jenkins will be printed to the console.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# docker-compose up
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Open a browser and go to &lt;strong&gt;http://localhost:8080&lt;/strong&gt;. Once initial setup is completed, stop the container with &lt;em&gt;Ctrl+C&lt;/em&gt;, then start it as a daemon.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# docker-compose up -d
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To shut down the container running in daemon mode, execute the following.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# docker-compose stop
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="deleting-the-container"&gt;
+&lt;h2&gt;Deleting the container&lt;/h2&gt;
+&lt;p&gt;To remove container setup, run the following command from the directory where &lt;strong&gt;docker-compose.yml&lt;/strong&gt; is located.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# docker-compose rm jenkins
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The data generated by Jenkins in docker container is saved in &lt;strong&gt;/srv/dockercontainer/jenkins_home&lt;/strong&gt; with user 'jenkins' and group 'jenkins'.&lt;/p&gt;
+&lt;table class="docutils footnote" frame="void" id="id7" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[1]&lt;/td&gt;&lt;td&gt;FSOSS 2016 -- &lt;a class="reference external" href="http://cdot.fsoss.ca/2016/"&gt;http://cdot.fsoss.ca/2016/&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils footnote" frame="void" id="id8" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[2]&lt;/td&gt;&lt;td&gt;Docker installation on Debian -- &lt;a class="reference external" href="https://docs.docker.com/engine/installation/linux/debian/"&gt;https://docs.docker.com/engine/installation/linux/debian/&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils footnote" frame="void" id="id9" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[3]&lt;/td&gt;&lt;td&gt;Install Compose -- &lt;a class="reference external" href="https://docs.docker.com/compose/install/"&gt;https://docs.docker.com/compose/install/&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils footnote" frame="void" id="id10" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[4]&lt;/td&gt;&lt;td&gt;Official Jenkins Docker image -- &lt;a class="reference external" href="https://hub.docker.com/_/jenkins/"&gt;https://hub.docker.com/_/jenkins/&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils footnote" frame="void" id="id11" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[5]&lt;/td&gt;&lt;td&gt;Manage data in containers -- &lt;a class="reference external" href="https://docs.docker.com/engine/tutorials/dockervolumes/"&gt;https://docs.docker.com/engine/tutorials/dockervolumes/&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+</content><category term="python"></category><category term="jenkins"></category><category term="docker"></category><category term="debian"></category></entry><entry><title>Linting and declaration lookup for Python with Sublime Text 3</title><link href="https://avolkov.github.io/linting-and-declaration-lookup-for-python-with-sublime-text-3.html" rel="alternate"></link><published>2016-10-23T22:18:00-04:00</published><updated>2016-10-23T22:18:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-23:/linting-and-declaration-lookup-for-python-with-sublime-text-3.html</id><summary type="html">&lt;p&gt;Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;linting -- letting the computer keep track of consistent coding style&lt;/li&gt;
+&lt;li&gt;definition lookup -- letting the computer to look …&lt;/li&gt;&lt;/ul&gt;</summary><content type="html">&lt;p&gt;Recently I had to completely reset my Sublime Text 3 project settings and set everything up from scratch. I find the following two features the most important and need to be configured first:&lt;/p&gt;
 &lt;ul class="simple"&gt;
 &lt;li&gt;linting -- letting the computer keep track of consistent coding style&lt;/li&gt;
 &lt;li&gt;definition lookup -- letting the computer to look up location of definitions&lt;/li&gt;
@@ -119,7 +936,8 @@
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;/div&gt;
-</summary><category term="sublime"></category><category term="python"></category><category term="anaconda"></category><category term="programming"></category><category term="debian"></category></entry><entry><title>Debian Automated Install</title><link href="https://avolkov.github.io/debian-automated-install.html" rel="alternate"></link><published>2016-10-17T21:44:00-04:00</published><updated>2016-10-17T21:44:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-17:debian-automated-install.html</id><summary type="html">&lt;p&gt;A few days ago in my part of the talk at GTALUG &lt;a class="footnote-reference" href="#id7" id="id1"&gt;[1]&lt;/a&gt;  I mentioned using Debian automated install &lt;a class="footnote-reference" href="#id8" id="id2"&gt;[2]&lt;/a&gt; to quickly bring up fully virtualized systems, as one of possible methods of system deployment or testing Ansible scripts.&lt;/p&gt;
+</content><category term="sublime"></category><category term="python"></category><category term="anaconda"></category><category term="programming"></category><category term="debian"></category></entry><entry><title>Debian Automated Install</title><link href="https://avolkov.github.io/debian-automated-install.html" rel="alternate"></link><published>2016-10-17T21:44:00-04:00</published><updated>2016-10-17T21:44:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-10-17:/debian-automated-install.html</id><summary type="html">&lt;p&gt;A few days ago in my part of the talk at GTALUG &lt;a class="footnote-reference" href="#id7" id="id1"&gt;[1]&lt;/a&gt;  I mentioned using Debian automated install &lt;a class="footnote-reference" href="#id8" id="id2"&gt;[2]&lt;/a&gt; to quickly bring up fully virtualized systems, as one of possible methods of system deployment or testing Ansible scripts.&lt;/p&gt;
+&lt;p&gt;This idea worked so well that I made a youtube video …&lt;/p&gt;</summary><content type="html">&lt;p&gt;A few days ago in my part of the talk at GTALUG &lt;a class="footnote-reference" href="#id7" id="id1"&gt;[1]&lt;/a&gt;  I mentioned using Debian automated install &lt;a class="footnote-reference" href="#id8" id="id2"&gt;[2]&lt;/a&gt; to quickly bring up fully virtualized systems, as one of possible methods of system deployment or testing Ansible scripts.&lt;/p&gt;
 &lt;p&gt;This idea worked so well that I made a youtube video out of it --&lt;/p&gt;
 &lt;div class="youtube youtube-16x9"&gt;&lt;iframe src="https://www.youtube.com/embed/WtIkKrkzPSw" allowfullscreen seamless frameBorder="0"&gt;&lt;/iframe&gt;&lt;/div&gt;&lt;p&gt;The video is based on the following: preseed file &lt;a class="footnote-reference" href="#id9" id="id3"&gt;[3]&lt;/a&gt; taken from kali linux preseed &lt;a class="footnote-reference" href="#id10" id="id4"&gt;[4]&lt;/a&gt; and gen_iso script &lt;a class="footnote-reference" href="#id11" id="id5"&gt;[5]&lt;/a&gt;, the latter is a distilled version EditIso instructions from Debian Wiki &lt;a class="footnote-reference" href="#id12" id="id6"&gt;[6]&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Example usage -- generating an ISO image based on an existing Debian ISO and a preseed.cfg:&lt;/p&gt;
@@ -182,12 +1000,21 @@
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;/div&gt;
-</summary><category term="debian"></category><category term="automation"></category><category term="preseeding"></category></entry><entry><title>Hello world</title><link href="https://avolkov.github.io/hello.html" rel="alternate"></link><published>2016-09-29T22:01:00-04:00</published><updated>2016-09-29T22:01:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-09-29:hello.html</id><summary type="html">&lt;p&gt;A one way of learning restructured test is to start writing all of the things
+</content><category term="debian"></category><category term="automation"></category><category term="preseeding"></category></entry><entry><title>Hello world</title><link href="https://avolkov.github.io/hello.html" rel="alternate"></link><published>2016-09-29T22:01:00-04:00</published><updated>2016-09-29T22:01:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-09-29:/hello.html</id><summary type="html">&lt;p&gt;A one way of learning restructured test is to start writing all of the things
 down using rst. &lt;a class="reference external" href="http://docs.getpelican.com/en/3.3.0/getting_started.html"&gt;Pelican&lt;/a&gt;
 is a rather nice static site generator.&lt;/p&gt;
 &lt;p&gt;A short tutorial on how to set up a blog with pelican, rst and github pages can be found
 on &lt;a class="reference external" href="http://www.circuidipity.com/pelican.html"&gt;Circuidipity&lt;/a&gt;.&lt;/p&gt;
-</summary><category term="pelican"></category><category term="web"></category><category term="rst"></category><category term="github"></category><category term="first"></category></entry><entry><title>Thursday's Raspberry Pi meetup</title><link href="https://avolkov.github.io/thursdays-raspberry-pi-meetup.html" rel="alternate"></link><published>2016-01-17T22:01:00-05:00</published><updated>2016-01-17T22:01:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-01-17:thursdays-raspberry-pi-meetup.html</id><summary type="html">&lt;p&gt;I went to &lt;a class="reference external" href="http://www.meetup.com/Raspberry-Pi/"&gt;Raspberry Pi meetup&lt;/a&gt; on Thursday, January 14, and would like to share some links about the presentation I gave and things I brought with me.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;A one way of learning restructured test is to start writing all of the things
+down using rst. &lt;a class="reference external" href="http://docs.getpelican.com/en/3.3.0/getting_started.html"&gt;Pelican&lt;/a&gt;
+is a rather nice static site generator.&lt;/p&gt;
+&lt;p&gt;A short tutorial on how to set up a blog with pelican, rst and github pages can be found
+on &lt;a class="reference external" href="http://www.circuidipity.com/pelican.html"&gt;Circuidipity&lt;/a&gt;.&lt;/p&gt;
+</content><category term="pelican"></category><category term="web"></category><category term="rst"></category><category term="github"></category><category term="first"></category></entry><entry><title>Thursday's Raspberry Pi meetup</title><link href="https://avolkov.github.io/thursdays-raspberry-pi-meetup.html" rel="alternate"></link><published>2016-01-17T22:01:00-05:00</published><updated>2016-01-17T22:01:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-01-17:/thursdays-raspberry-pi-meetup.html</id><summary type="html">&lt;p&gt;I went to &lt;a class="reference external" href="http://www.meetup.com/Raspberry-Pi/"&gt;Raspberry Pi meetup&lt;/a&gt; on Thursday, January 14, and would like to share some links about the presentation I gave and things I brought with me.&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://github.com/avolkov/rpi-opencv"&gt;Instructions on setting up OpenCV on Raspbian Jessie&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://github.com/avolkov/my-first-automatic-door-man"&gt;My fork of Thiago's automatic doorman that works with PiCamera&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://picamera.readthedocs.org/en/release-1.10/"&gt;Python library and documentation …&lt;/a&gt;&lt;/li&gt;&lt;/ol&gt;</summary><content type="html">&lt;p&gt;I went to &lt;a class="reference external" href="http://www.meetup.com/Raspberry-Pi/"&gt;Raspberry Pi meetup&lt;/a&gt; on Thursday, January 14, and would like to share some links about the presentation I gave and things I brought with me.&lt;/p&gt;
 &lt;ol class="arabic simple"&gt;
 &lt;li&gt;&lt;a class="reference external" href="https://github.com/avolkov/rpi-opencv"&gt;Instructions on setting up OpenCV on Raspbian Jessie&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a class="reference external" href="https://github.com/avolkov/my-first-automatic-door-man"&gt;My fork of Thiago's automatic doorman that works with PiCamera&lt;/a&gt;&lt;/li&gt;
@@ -198,7 +1025,8 @@ on &lt;a class="reference external" href="http://www.circuidipity.com/pelican.ht
 &lt;li&gt;&lt;a class="reference external" href="https://www.tiagoespinha.net/2014/05/project-how-to-easily-monitor-your-plants-soil-humidity/"&gt;A more complete soil hygrometer tutorial&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;One important thing to be aware about soil moisture sensor, is to not apply voltage to the soil probe all the time or take too many measurements at once as leads on the probe will quickly corrode. Also the probe has analog data output, and it looks like it would work better with Adruino board than Raspberry Pi as the latter doesn't have analog input pins.&lt;/p&gt;
-</summary><category term="raspberrypi"></category><category term="opencv"></category><category term="gardening"></category></entry><entry><title>Fun of premature optimization</title><link href="https://avolkov.github.io/fun-of-premature-optimization.html" rel="alternate"></link><published>2016-01-09T00:00:00-05:00</published><updated>2016-01-09T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-01-09:fun-of-premature-optimization.html</id><summary type="html">&lt;p&gt;Last week I deployed a redesigned website that included a new search feature, looking at the server logs I've noticed that users of the site use search. A lot.&lt;/p&gt;
+</content><category term="raspberrypi"></category><category term="opencv"></category><category term="gardening"></category></entry><entry><title>Fun of premature optimization</title><link href="https://avolkov.github.io/fun-of-premature-optimization.html" rel="alternate"></link><published>2016-01-09T00:00:00-05:00</published><updated>2016-01-09T00:00:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2016-01-09:/fun-of-premature-optimization.html</id><summary type="html">&lt;p&gt;Last week I deployed a redesigned website that included a new search feature, looking at the server logs I've noticed that users of the site use search. A lot.&lt;/p&gt;
+&lt;p&gt;I wanted to know more about what kind of questions end-users were asking, so I wrote a short program to parse …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Last week I deployed a redesigned website that included a new search feature, looking at the server logs I've noticed that users of the site use search. A lot.&lt;/p&gt;
 &lt;p&gt;I wanted to know more about what kind of questions end-users were asking, so I wrote a short program to parse the logs, extracting query strings formed with HTTP GET variable &lt;cite&gt;q=query+text&lt;/cite&gt;. It was fairly easy do, especially with apache_log_parser &lt;a class="reference external" href="https://pypi.python.org/pypi/apache-log-parser/"&gt;pypi&lt;/a&gt;, &lt;a class="reference external" href="https://github.com/rory/apache-log-parser"&gt;github&lt;/a&gt;, that works with any web server with &lt;a class="reference external" href="https://httpd.apache.org/docs/1.3/logs.html#common"&gt;common log format&lt;/a&gt; support. Nginx is compatible, default access log line can be parsed with this -- &lt;em&gt;%h %l %u %t &amp;quot;%r&amp;quot; %&amp;gt;s %O &amp;quot;%{Referer}i&amp;quot; &amp;quot;%{User-Agent}i'&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;The program returns an array records, each containing query string, remote IP address and a time stamp, then I toyed with the idea of measuring its performance, so I tested several possibilities with the most crude tool ever -- &lt;a class="reference external" href="http://ss64.com/bash/time.html"&gt;time command&lt;/a&gt;. I used &lt;em&gt;real&lt;/em&gt; time value.&lt;/p&gt;
 &lt;p&gt;The setup: this program is implemented in Python 3, it was run on Intel Celeron 2955U, the input log file size is 15MB. All the code changes were cumulative -- the performance was measured with all the changes up to that point.&lt;/p&gt;
@@ -240,7 +1068,7 @@ on &lt;a class="reference external" href="http://www.circuidipity.com/pelican.ht
                 &lt;span class="n"&gt;search_list&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;prep_item&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;item&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;outp&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;search_list&lt;/span&gt;
 
-&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="vm"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
     &lt;span class="n"&gt;searches&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;extract_searches&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;log_file&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
     &lt;span class="n"&gt;pprint&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;searches&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -286,7 +1114,7 @@ The code will look much cleaner, generators are a little slower than in-memory o
 
 &lt;span class="o"&gt;...&lt;/span&gt;
 
-&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="vm"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
     &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;log_file&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;r&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;logfile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
         &lt;span class="n"&gt;searches&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;extract_searches&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;logfile&lt;/span&gt;&lt;span class="p"&gt;)]&lt;/span&gt;
     &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;searches&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -398,7 +1226,8 @@ The code will look much cleaner, generators are a little slower than in-memory o
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;I can think of two things after doing this exercise: first, &lt;a class="reference external" href="http://www.joelonsoftware.com/articles/LeakyAbstractions.html"&gt;the law of leaky abstractions&lt;/a&gt; is still with us even if the abstracted code is relatively straightforward and works well, there are still implementation details to be aware of; second, fixing up and making code better and more pythonic helps me to think about program flow differently with much greater potential benefits in the long run, even if in the short run performance of a program may decrease.&lt;/p&gt;
-</summary><category term="python"></category><category term="apache logs"></category><category term="regular expressions"></category><category term="performance"></category></entry><entry><title>My awesome 15K MEC Run</title><link href="https://avolkov.github.io/my-awesome-15k-mec-run.html" rel="alternate"></link><published>2015-12-06T22:44:33-05:00</published><updated>2015-12-06T22:44:33-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2015-12-06:my-awesome-15k-mec-run.html</id><summary type="html">&lt;p&gt;These are my experiences from MEC Race Seven that happened on October 20, 2015. I posted this a while ago on EYTR page, now I finally got a couple of photos of it.&lt;/p&gt;
+</content><category term="python"></category><category term="apache logs"></category><category term="regular expressions"></category><category term="performance"></category></entry><entry><title>My awesome 15K MEC Run</title><link href="https://avolkov.github.io/my-awesome-15k-mec-run.html" rel="alternate"></link><published>2015-12-06T22:44:33-05:00</published><updated>2015-12-06T22:44:33-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2015-12-06:/my-awesome-15k-mec-run.html</id><summary type="html">&lt;p&gt;These are my experiences from MEC Race Seven that happened on October 20, 2015. I posted this a while ago on EYTR page, now I finally got a couple of photos of it.&lt;/p&gt;
+&lt;p&gt;I'm still not sure how that's possible but I ran MEC 15K in 1:09:42.0 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;These are my experiences from MEC Race Seven that happened on October 20, 2015. I posted this a while ago on EYTR page, now I finally got a couple of photos of it.&lt;/p&gt;
 &lt;p&gt;I'm still not sure how that's possible but I ran MEC 15K in 1:09:42.0. That brought me to #11 finisher.&lt;/p&gt;
 &lt;p&gt;My watch shows the average pace of 4.39 Min/Km. Which is not the kind of numbers I'm used to or expect.&lt;/p&gt;
 &lt;p&gt;I started the run at a pace that was way too fast breathing like a steam locomotive for the first 2K. Then I followed a runner who was keeping a pace of 4:20-4:30 Min/Km and I managed to run along until 4.5K mark. Then I started falling behind, but I didn't fall behind for more than a couple hundred meters.&lt;/p&gt;
@@ -408,7 +1237,9 @@ The code will look much cleaner, generators are a little slower than in-memory o
 &lt;p&gt;The remainder of the race became a mental battle that turned from &lt;em&gt;not falling apart before 10K&lt;/em&gt; to &lt;em&gt;not falling apart at the next K&lt;/em&gt; and finally &lt;em&gt;not falling apart at the last K&lt;/em&gt;. I'm glad to report I have managed.&lt;/p&gt;
 &lt;p&gt;I've been running around 25-40K in the last three or four weeks but never more than 15K at a time, I also would sometimes run during our regular runs with Becca or Navin at a pace 4:30-4:40 Min/Km but no more than 2 or 3KM at a time, apparently both of those things really helped.&lt;/p&gt;
 &lt;p&gt;Thanks guys and gals!&lt;/p&gt;
-</summary><category term="running"></category></entry><entry><title>Raspberry Pi Wireless config</title><link href="https://avolkov.github.io/raspberry-pi-wireless-config.html" rel="alternate"></link><published>2015-12-06T00:57:30-05:00</published><updated>2015-12-06T00:57:30-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2015-12-06:raspberry-pi-wireless-config.html</id><summary type="html">&lt;p&gt;Here's working wireless configuration I use to connect my Raspberry Pis with USB wifi dongles to my home network.&lt;/p&gt;
+</content><category term="running"></category></entry><entry><title>Raspberry Pi Wireless config</title><link href="https://avolkov.github.io/raspberry-pi-wireless-config.html" rel="alternate"></link><published>2015-12-06T00:57:30-05:00</published><updated>2015-12-06T00:57:30-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2015-12-06:/raspberry-pi-wireless-config.html</id><summary type="html">&lt;p&gt;Here's working wireless configuration I use to connect my Raspberry Pis with USB wifi dongles to my home network.&lt;/p&gt;
+&lt;p&gt;I've been using Realtek RTL8188CUS and Ralink RT5370 based devices rated for 150Mbps.&lt;/p&gt;
+&lt;p&gt;Dongles based on Ralink chip have been working flawlessly, but I have experienced two issues with the Realtek-based …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Here's working wireless configuration I use to connect my Raspberry Pis with USB wifi dongles to my home network.&lt;/p&gt;
 &lt;p&gt;I've been using Realtek RTL8188CUS and Ralink RT5370 based devices rated for 150Mbps.&lt;/p&gt;
 &lt;p&gt;Dongles based on Ralink chip have been working flawlessly, but I have experienced two issues with the Realtek-based device. The adapter just doesn't work in AP mode, and if there's no network activity it will drop in power saving mode that can only be resumed packets are sent from the host.&lt;/p&gt;
 &lt;p&gt;In practical terms the host becomes unavailable for anyone who attempts to initiate a remote connection, however, this can be mitigated by creating a cron job that pings the router every minute.&lt;/p&gt;
@@ -421,7 +1252,7 @@ iface default inet dhcp
 &lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Edit &lt;strong&gt;/etc/wpa_supplicant/wpa_supplicant.conf&lt;/strong&gt; as such.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nv"&gt;ctrl_interface&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;DIR&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;/var/run/wpa_supplicant &lt;span class="nv"&gt;GROUP&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;netdev
-&lt;span class="nv"&gt;update_config&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;1
+&lt;span class="nv"&gt;update_config&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;
 
 &lt;span class="nv"&gt;network&lt;/span&gt;&lt;span class="o"&gt;={&lt;/span&gt;
         &lt;span class="nv"&gt;ssid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;AP Name&amp;quot;&lt;/span&gt;
@@ -432,4 +1263,4 @@ iface default inet dhcp
         &lt;span class="nv"&gt;auth_alg&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;OPEN
 &lt;span class="o"&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
-</summary><category term="raspberrypi"></category><category term="networking"></category><category term="wireless"></category><category term="realtek"></category><category term="ralink"></category><category term="usb"></category></entry></feed>
+</content><category term="raspberrypi"></category><category term="networking"></category><category term="wireless"></category><category term="realtek"></category><category term="ralink"></category><category term="usb"></category></entry></feed>
