@@ -1,5 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/all.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2018-11-22T16:50:00-05:00</updated><entry><title>Fear Of Missing Out as a business model for Facebook</title><link href="https://avolkov.github.io/fear-of-missing-out-as-a-business-model-for-facebook.html" rel="alternate"></link><published>2018-11-22T16:50:00-05:00</published><updated>2018-11-22T16:50:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2018-11-22:/fear-of-missing-out-as-a-business-model-for-facebook.html</id><summary type="html">&lt;p&gt;I have written this post back in September, but didn't get arount to posting it now.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>disparate notes</title><link href="https://avolkov.github.io/" rel="alternate"></link><link href="https://avolkov.github.io/feeds/all.atom.xml" rel="self"></link><id>https://avolkov.github.io/</id><updated>2019-10-14T00:00:00-04:00</updated><entry><title>Speeding up generation of Kdenlive proxies with nvenc</title><link href="https://avolkov.github.io/speeding-up-generation-of-kdenlive-proxies-with-nvenc.html" rel="alternate"></link><published>2019-10-14T00:00:00-04:00</published><updated>2019-10-14T00:00:00-04:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2019-10-14:/speeding-up-generation-of-kdenlive-proxies-with-nvenc.html</id><summary type="html">&lt;p class="first last"&gt;speedup proxies using nvenc&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="background"&gt;
+&lt;h2&gt;Background&lt;/h2&gt;
+&lt;p&gt;I've been using kdenlive video editor in the past year or so, and I like it a lot. But sometimes when I edit lots of videos it gets frustrating when the computer needs to stop and load another clip from storage device during preview. It takes a while even on an SSD drive.&lt;/p&gt;
+&lt;p&gt;Proxies are just low-res re-encodings of the same video, that lets kdenlive load smaller clips, which takes significantly less time and makes the editor more responsive. The proxy clips need to be encoded in the first place, when the videos are originally loaded into the project.&lt;/p&gt;
+&lt;p&gt;This is where nvenc comes in. NVENC uses nvidia graphics card to greatly speed up video encoding at the price of running proprietary libraries that aren't compiled into a default package.&lt;/p&gt;
+&lt;p&gt;This guide assumes you are running Debian with nvidia libraries installed and using ffmpeg from &lt;cite&gt;deb-multimedia repository &amp;lt;https://www.deb-multimedia.org/&amp;gt;_&lt;/cite&gt;.&lt;/p&gt;
+&lt;p&gt;I did a talk on the basics of setting up nvidia libraries and ffmpeg codec for debian here -- &lt;a class="reference external" href="https://youtu.be/eMu7ynAwECY?t=173"&gt;GPU computing in Debian with Alex Volkov&lt;/a&gt;
+I'm using GeForce GTX1060 6GB on running debian testing (bullseye).&lt;/p&gt;
+&lt;p&gt;For quick video scaling you need to have &lt;a class="reference external" href="https://developer.nvidia.com/ffmpeg"&gt;CUDA Scale Filter&lt;/a&gt; however, it's not shipped by default with ffmpeg not even in deb-multimedia repository because it relies on &lt;cite&gt;libnppc10 &amp;lt;https://packages.debian.org/bullseye/libnppc10&amp;gt;&lt;/cite&gt; which is in non-free, and having a dependency on a non-free repository is against the packaging policy of deb-multimedia. So this has to be compiled manually.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="manually-compile-ffmpeg-to-add-scale-npp-support"&gt;
+&lt;h2&gt;Manually compile FFMPEG to add scale_npp support&lt;/h2&gt;
+&lt;p&gt;Install libnppc10 package that provides scale_npp filter.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# apt install libnppc10
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Install all build dependencies of ffmpeg&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# apt-get build-dep ffmpeg
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Find a folder on your computer where the build take place, the whole thing takes about 2.8GB of space. Download source code with the following command.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ apt-get source ffmpeg
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Once ffmpeg source has been downloaded, add the following configuration parameters in &lt;strong&gt;debian/rules&lt;/strong&gt; under CONFIG_ALL variable&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;CONFIG_ALL = \
+--enable-libnpp \
+--enable-cuda \
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Compile the package. This is going to take a while.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ dpkg-buildpackage
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now if you go one directory level up, you should see the following packages created at the end of compilation process.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ls | grep .deb$
+ffmpeg_4.2.1-dmo3_amd64.deb
+ffmpeg-dbgsym_4.2.1-dmo3_amd64.deb
+ffmpeg-doc_4.2.1-dmo3_all.deb
+libavcodec58_4.2.1-dmo3_amd64.deb
+libavcodec58-dbgsym_4.2.1-dmo3_amd64.deb
+libavcodec-dev_4.2.1-dmo3_amd64.deb
+libavdevice58_4.2.1-dmo3_amd64.deb
+libavdevice58-dbgsym_4.2.1-dmo3_amd64.deb
+libavdevice-dev_4.2.1-dmo3_amd64.deb
+libavfilter7_4.2.1-dmo3_amd64.deb
+libavfilter7-dbgsym_4.2.1-dmo3_amd64.deb
+libavfilter-dev_4.2.1-dmo3_amd64.deb
+libavformat58_4.2.1-dmo3_amd64.deb
+libavformat58-dbgsym_4.2.1-dmo3_amd64.deb
+libavformat-dev_4.2.1-dmo3_amd64.deb
+libavresample4_4.2.1-dmo3_amd64.deb
+libavresample4-dbgsym_4.2.1-dmo3_amd64.deb
+libavresample-dev_4.2.1-dmo3_amd64.deb
+libavutil56_4.2.1-dmo3_amd64.deb
+libavutil56-dbgsym_4.2.1-dmo3_amd64.deb
+libavutil-dev_4.2.1-dmo3_amd64.deb
+libpostproc55_4.2.1-dmo3_amd64.deb
+libpostproc55-dbgsym_4.2.1-dmo3_amd64.deb
+libpostproc-dev_4.2.1-dmo3_amd64.deb
+libswresample3_4.2.1-dmo3_amd64.deb
+libswresample3-dbgsym_4.2.1-dmo3_amd64.deb
+libswresample-dev_4.2.1-dmo3_amd64.deb
+libswscale5_4.2.1-dmo3_amd64.deb
+libswscale5-dbgsym_4.2.1-dmo3_amd64.deb
+libswscale-dev_4.2.1-dmo3_amd64.deb
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Install the packages using the following command&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# dpkg -i *.deb
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Verify that scale_npp filter is available with the following command&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ffmpeg -hide_banner -filters | grep scale_npp
+... scale_npp         V-&amp;gt;V       NVIDIA Performance Primitives video scaling and format conversion
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="make-kdenlive-to-use-scale-npp-proxies"&gt;
+&lt;h2&gt;Make kdenlive to use scale_npp proxies&lt;/h2&gt;
+&lt;p&gt;Once scale_npp filter is available, let kdenlive use it. I tested this on Kdenlive 19.08.1.&lt;/p&gt;
+&lt;p&gt;Go to &lt;strong&gt;Settings -&amp;gt; Configure Kdenlive -&amp;gt; Proxy Clips&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Click settings next to an encoding profile and then add a new profile.&lt;/p&gt;
+&lt;img alt="Add new proxy encoding profile" class="align-center" src="images/2019-10-14/001-add-proxy-clip.png" /&gt;
+&lt;p&gt;I use the following proxy, specifically for the video output of my Panasonic GH4 in MOV mode. I find if I try to use other codec than aac, I'd get 'Not supported errors'&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Profile Name:&lt;/strong&gt; x264-nvenc-gh4-aac-h264_cuvid&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Parameters:&lt;/strong&gt; -hwaccel cuvid -c:v h264_cuvid -i -vf scale_npp=720:-2 -vcodec h264_nvenc -g 1 -bf 0 -vb 0 -preset fast -acodec aac&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;File Exension:&lt;/strong&gt; mov&lt;/p&gt;
+&lt;img alt="dialog of profile parameters with the settings above" class="align-center" src="images/2019-10-14/002-profile-parameters.png" /&gt;
+&lt;p&gt;Then back in 'Configure Kdenlive' window, go to 'Environment' section and in 'Proxy Clips' set concurrent threads to '1'. My video card supports only two streams and by default two proxy clips are processed at once, if I have more streams than that, nvcodec will raise out of memory error.&lt;/p&gt;
+&lt;img alt="setting 1 concurrent proxy clip encoding thread" class="align-center" src="images/2019-10-14/003-proxy-clip-environment.png" /&gt;
+&lt;/div&gt;
+&lt;div class="section" id="testing"&gt;
+&lt;h2&gt;Testing&lt;/h2&gt;
+&lt;p&gt;When selecting proxy clip in the clip preview. During clip encoding Video Engine Utilization in nvidia-settings should be between 60%-100%&lt;/p&gt;
+&lt;img alt="Typical gpu utilization when encoding proxies" class="align-center" src="images/2019-10-14/004-gpu-utilization.png" /&gt;
+&lt;/div&gt;
+</content><category term="kdenlive"></category><category term="video editing"></category></entry><entry><title>Fear Of Missing Out as a business model for Facebook</title><link href="https://avolkov.github.io/fear-of-missing-out-as-a-business-model-for-facebook.html" rel="alternate"></link><published>2018-11-22T16:50:00-05:00</published><updated>2018-11-22T16:50:00-05:00</updated><author><name>Alex Volkov</name></author><id>tag:avolkov.github.io,2018-11-22:/fear-of-missing-out-as-a-business-model-for-facebook.html</id><summary type="html">&lt;p&gt;I have written this post back in September, but didn't get arount to posting it now.&lt;/p&gt;
 &lt;p&gt;I  quit twitter back in September, when I finally I got convinced that twitter managed to find business model where they convert human misery into money.&lt;/p&gt;
 &lt;p&gt;I'm a member of the board of a …&lt;/p&gt;</summary><content type="html">&lt;p&gt;I have written this post back in September, but didn't get arount to posting it now.&lt;/p&gt;
 &lt;p&gt;I  quit twitter back in September, when I finally I got convinced that twitter managed to find business model where they convert human misery into money.&lt;/p&gt;
@@ -655,15 +745,15 @@ Exception: idlelib could not be found. Check your operating system instructions 
 &lt;div class="section" id="docker-compose-file"&gt;
 &lt;h2&gt;Docker compose file&lt;/h2&gt;
 &lt;p&gt;&lt;strong&gt;docker-compose.yml&lt;/strong&gt; specifies startup settings for Jenkins container.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="l l-Scalar l-Scalar-Plain"&gt;version&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;2&amp;#39;&lt;/span&gt;
-&lt;span class="l l-Scalar l-Scalar-Plain"&gt;services&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
-  &lt;span class="l l-Scalar l-Scalar-Plain"&gt;jenkins&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
-    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;image&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;jenkins&lt;/span&gt;
-    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;user&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;20000:20000&amp;quot;&lt;/span&gt;
-    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;ports&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nt"&gt;version&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;2&amp;#39;&lt;/span&gt;
+&lt;span class="nt"&gt;services&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;jenkins&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;image&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;jenkins&lt;/span&gt;
+    &lt;span class="nt"&gt;user&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;20000:20000&amp;quot;&lt;/span&gt;
+    &lt;span class="nt"&gt;ports&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
       &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;5000:5000&amp;quot;&lt;/span&gt;
       &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;8080:8080&amp;quot;&lt;/span&gt;
-    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;volumes&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;volumes&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
       &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;/srv/dockercontainer/jenkins_home:/var/jenkins_home&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 &lt;ul class="simple"&gt;

@@ -21,6 +21,7 @@
                     <li><a href="https://avolkov.github.io/category/programming.html">programming</a></li>
                     <li><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
                     <li><a href="https://avolkov.github.io/category/tools.html">tools</a></li>
+                    <li><a href="https://avolkov.github.io/category/video-editing.html">video editing</a></li>
                     <li><a href="https://avolkov.github.io/category/web-application-development.html">web application development</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
@@ -78,15 +79,15 @@
 <div class="section" id="docker-compose-file">
 <h2>Docker compose file</h2>
 <p><strong>docker-compose.yml</strong> specifies startup settings for Jenkins container.</p>
-<div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">version</span><span class="p p-Indicator">:</span> <span class="s">&#39;2&#39;</span>
-<span class="l l-Scalar l-Scalar-Plain">services</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">jenkins</span><span class="p p-Indicator">:</span>
-    <span class="l l-Scalar l-Scalar-Plain">image</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">jenkins</span>
-    <span class="l l-Scalar l-Scalar-Plain">user</span><span class="p p-Indicator">:</span> <span class="s">&quot;20000:20000&quot;</span>
-    <span class="l l-Scalar l-Scalar-Plain">ports</span><span class="p p-Indicator">:</span>
+<div class="highlight"><pre><span></span><span class="nt">version</span><span class="p">:</span> <span class="s">&#39;2&#39;</span>
+<span class="nt">services</span><span class="p">:</span>
+  <span class="nt">jenkins</span><span class="p">:</span>
+    <span class="nt">image</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">jenkins</span>
+    <span class="nt">user</span><span class="p">:</span> <span class="s">&quot;20000:20000&quot;</span>
+    <span class="nt">ports</span><span class="p">:</span>
       <span class="p p-Indicator">-</span> <span class="s">&quot;5000:5000&quot;</span>
       <span class="p p-Indicator">-</span> <span class="s">&quot;8080:8080&quot;</span>
-    <span class="l l-Scalar l-Scalar-Plain">volumes</span><span class="p p-Indicator">:</span>
+    <span class="nt">volumes</span><span class="p">:</span>
       <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/srv/dockercontainer/jenkins_home:/var/jenkins_home</span>
 </pre></div>
 <ul class="simple">
