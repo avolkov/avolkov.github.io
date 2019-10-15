@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>disparate notes - video editing</title>
+        <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
+        <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://avolkov.github.io/">disparate notes </a></h1>
+                <nav><ul>
+                    <li><a href="https://avolkov.github.io/category/ci.html">ci</a></li>
+                    <li><a href="https://avolkov.github.io/category/debugging-python-programs.html">debugging python programs</a></li>
+                    <li><a href="https://avolkov.github.io/category/misc.html">misc</a></li>
+                    <li><a href="https://avolkov.github.io/category/programming.html">programming</a></li>
+                    <li><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
+                    <li><a href="https://avolkov.github.io/category/tools.html">tools</a></li>
+                    <li><a href="https://avolkov.github.io/category/video-editing.html">video editing</a></li>
+                    <li><a href="https://avolkov.github.io/category/web-application-development.html">web application development</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/kdenlive-nvenc-video-settings-for-youtube.html">Kdenlive nvenc video settings for Youtube</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2019-10-14T00:00:00-04:00">
+                Published: Mon 14 October 2019
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/video-editing.html">video editing</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/kdenlive.html">kdenlive</a> <a href="https://avolkov.github.io/tag/video-editing.html">video editing</a> <a href="https://avolkov.github.io/tag/nvidia.html">nvidia</a> </p>
+</footer><!-- /.post-info --><p>After numerous tryings in to follow codec settings for youtube <a class="footnote-reference" href="#id4" id="id1">[1]</a> in order to processing time after the video was uploaded, I've come up with the following Kdenlive settings for 1080p video using Nvidia hardware.</p>
+<div class="highlight"><pre><span></span>f=mp4 vcodec=nvenc_h264 acodec=aac ab=384k g=15 profile:v=high global_quality=21 -coder 1 vq=21 -r 29.97 preset=slow bf=2 movflags=faststart pix_fmt=yuv420p
+</pre></div>
+<p>The thing these settings don't have is bitrate limit, however in the videos I've encoded, I didn't notice exceeding bitrate it always seem to be under 15Mbps.</p>
+<p>Here's my rationale for each of these encoding options.</p>
+<ul class="simple">
+<li><strong>f=mp4</strong> use mp4 container</li>
+<li><strong>vcodec=nvenc_h264</strong> utilize nvidia hardware acceleration</li>
+<li><strong>acodec=aac ab=384k</strong> use AAC audio codec with bitrate 384k</li>
+<li><strong>global_quality=21 -coder 1 vq=21 preset=slow</strong> following some of the recommendations from this stackoverflow answer on intricacies of nvidia encoder <a class="footnote-reference" href="#id5" id="id2">[2]</a></li>
+<li><strong>-r 29.97</strong> use 29.97 FPS frame rate. This is the framerate I shoot the video with and this is the framerate I use to publish video. This will avoid recording light flickering effect in North America power grid.</li>
+<li><strong>bf=2</strong> 2 consecutive B-frames (youtube recommendation)</li>
+<li><strong>movflags=faststart</strong> youtube recoomendation (mp4 container), see additional discussion on superuser.com <a class="footnote-reference" href="#id6" id="id3">[3]</a></li>
+<li><strong>pix_fmt=yuv420p</strong> pixel format/color encoding to use (youtube recommendation)</li>
+</ul>
+<div class="section" id="references">
+<h2>References</h2>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><a class="reference external" href="https://support.google.com/youtube/answer/1722171?hl=en">Recommended upload encoding settings</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td><a class="reference external" href="https://superuser.com/a/1296511/420376">Best settings for FFMpeg with NVENC</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[3]</td><td><a class="reference external" href="https://superuser.com/questions/856025/any-downsides-to-always-using-the-movflags-faststart-parameter">Any downsides to always using the -movflags faststart parameter?</a></td></tr>
+</tbody>
+</table>
+</div>
+                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="https://avolkov.github.io/speeding-up-generation-of-kdenlive-proxies-with-nvenc.html" rel="bookmark"
+                           title="Permalink to Speeding up generation of Kdenlive proxies with nvenc">Speeding up generation of Kdenlive proxies with nvenc</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2019-10-14T00:00:00-04:00">
+                Published: Mon 14 October 2019
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/video-editing.html">video editing</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/kdenlive.html">kdenlive</a> <a href="https://avolkov.github.io/tag/video-editing.html">video editing</a> <a href="https://avolkov.github.io/tag/nvidia.html">nvidia</a> </p>
+</footer><!-- /.post-info -->                <p class="first last">speedup proxies using nvenc</p>
+
+                <a class="readmore" href="https://avolkov.github.io/speeding-up-generation-of-kdenlive-proxies-with-nvenc.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+                </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                            <li><a href="https://mastodon.xyz/@avolkov">mastodon</a></li>
+                            <li><a href="http://flamy.ca">homepage</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
