@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
         <meta charset="utf-8" />
-        <title>disparate notes - video editing</title>
+        <title>Kdenlive nvenc video settings for Youtube</title>
         <link rel="stylesheet" href="https://avolkov.github.io/theme/css/main.css" />
         <link href="https://avolkov.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="disparate notes Atom Feed" />
 
@@ -21,14 +21,19 @@
                     <li><a href="https://avolkov.github.io/category/programming.html">programming</a></li>
                     <li><a href="https://avolkov.github.io/category/testing.html">testing</a></li>
                     <li><a href="https://avolkov.github.io/category/tools.html">tools</a></li>
-                    <li><a href="https://avolkov.github.io/category/video-editing.html">video editing</a></li>
+                    <li class="active"><a href="https://avolkov.github.io/category/video-editing.html">video editing</a></li>
                     <li><a href="https://avolkov.github.io/category/web-application-development.html">web application development</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="https://avolkov.github.io/kdenlive-nvenc-video-settings-for-youtube.html" rel="bookmark"
+           title="Permalink to Kdenlive nvenc video settings for Youtube">Kdenlive nvenc video settings for Youtube</a></h1>
+    </header>
 
-            <aside id="featured" class="body">
-                <article>
-                    <h1 class="entry-title"><a href="https://avolkov.github.io/kdenlive-nvenc-video-settings-for-youtube.html">Kdenlive nvenc video settings for Youtube</a></h1>
+    <div class="entry-content">
 <footer class="post-info">
         <abbr class="published" title="2019-10-14T00:00:00-04:00">
                 Published: Mon 14 October 2019
@@ -39,7 +44,7 @@
         </address>
 <p>In <a href="https://avolkov.github.io/category/video-editing.html">video editing</a>.</p>
 <p>tags: <a href="https://avolkov.github.io/tag/kdenlive.html">kdenlive</a> <a href="https://avolkov.github.io/tag/video-editing.html">video editing</a> <a href="https://avolkov.github.io/tag/nvidia.html">nvidia</a> </p>
-</footer><!-- /.post-info --><p>After numerous tryings in to follow codec settings for youtube <a class="footnote-reference" href="#id4" id="id1">[1]</a> in order to processing time after the video was uploaded, I've come up with the following Kdenlive settings for 1080p video using Nvidia hardware.</p>
+</footer><!-- /.post-info -->      <p>After numerous tryings in to follow codec settings for youtube <a class="footnote-reference" href="#id4" id="id1">[1]</a> in order to processing time after the video was uploaded, I've come up with the following Kdenlive settings for 1080p video using Nvidia hardware.</p>
 <div class="highlight"><pre><span></span>f=mp4 vcodec=nvenc_h264 acodec=aac ab=384k g=15 profile:v=high global_quality=21 -coder 1 vq=21 -r 29.97 preset=slow bf=2 movflags=faststart pix_fmt=yuv420p
 </pre></div>
 <p>The thing these settings don't have is bitrate limit, however in the videos I've encoded, I didn't notice exceeding bitrate it always seem to be under 15Mbps.</p>
@@ -75,37 +80,11 @@
 </tbody>
 </table>
 </div>
-                </article>
-            </aside><!-- /#featured -->
-                <section id="content" class="body">
-                    <h1>Other articles</h1>
-                    <hr />
-                    <ol id="posts-list" class="hfeed">
 
-            <li><article class="hentry">
-                <header>
-                    <h1><a href="https://avolkov.github.io/speeding-up-generation-of-kdenlive-proxies-with-nvenc.html" rel="bookmark"
-                           title="Permalink to Speeding up generation of Kdenlive proxies with nvenc">Speeding up generation of Kdenlive proxies with nvenc</a></h1>
-                </header>
+    </div><!-- /.entry-content -->
 
-                <div class="entry-content">
-<footer class="post-info">
-        <abbr class="published" title="2019-10-14T00:00:00-04:00">
-                Published: Mon 14 October 2019
-        </abbr>
-
-        <address class="vcard author">
-                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
-        </address>
-<p>In <a href="https://avolkov.github.io/category/video-editing.html">video editing</a>.</p>
-<p>tags: <a href="https://avolkov.github.io/tag/kdenlive.html">kdenlive</a> <a href="https://avolkov.github.io/tag/video-editing.html">video editing</a> <a href="https://avolkov.github.io/tag/nvidia.html">nvidia</a> </p>
-</footer><!-- /.post-info -->                <p class="first last">speedup proxies using nvenc</p>
-
-                <a class="readmore" href="https://avolkov.github.io/speeding-up-generation-of-kdenlive-proxies-with-nvenc.html">read more</a>
-                </div><!-- /.entry-content -->
-            </article></li>
-                </ol><!-- /#posts-list -->
-                </section><!-- /#content -->
+  </article>
+</section>
         <section id="extras" class="body">
                 <div class="social">
                         <h2>social</h2>

@@ -28,7 +28,7 @@
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="https://avolkov.github.io/speeding-up-generation-of-kdenlive-proxies-with-nvenc.html">Speeding up generation of Kdenlive proxies with nvenc</a></h1>
+                    <h1 class="entry-title"><a href="https://avolkov.github.io/kdenlive-nvenc-video-settings-for-youtube.html">Kdenlive nvenc video settings for Youtube</a></h1>
 <footer class="post-info">
         <abbr class="published" title="2019-10-14T00:00:00-04:00">
                 Published: Mon 14 October 2019
@@ -38,98 +38,74 @@
                 By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
         </address>
 <p>In <a href="https://avolkov.github.io/category/video-editing.html">video editing</a>.</p>
-<p>tags: <a href="https://avolkov.github.io/tag/kdenlive.html">kdenlive</a> <a href="https://avolkov.github.io/tag/video-editing.html">video editing</a> </p>
-</footer><!-- /.post-info --><div class="section" id="background">
-<h2>Background</h2>
-<p>I've been using kdenlive video editor in the past year or so, and I like it a lot. But sometimes when I edit lots of videos it gets frustrating when the computer needs to stop and load another clip from storage device during preview. It takes a while even on an SSD drive.</p>
-<p>Proxies are just low-res re-encodings of the same video, that lets kdenlive load smaller clips, which takes significantly less time and makes the editor more responsive. The proxy clips need to be encoded in the first place, when the videos are originally loaded into the project.</p>
-<p>This is where nvenc comes in. NVENC uses nvidia graphics card to greatly speed up video encoding at the price of running proprietary libraries that aren't compiled into a default package.</p>
-<p>This guide assumes you are running Debian with nvidia libraries installed and using ffmpeg from <cite>deb-multimedia repository &lt;https://www.deb-multimedia.org/&gt;_</cite>.</p>
-<p>I did a talk on the basics of setting up nvidia libraries and ffmpeg codec for debian here -- <a class="reference external" href="https://youtu.be/eMu7ynAwECY?t=173">GPU computing in Debian with Alex Volkov</a>
-I'm using GeForce GTX1060 6GB on running debian testing (bullseye).</p>
-<p>For quick video scaling you need to have <a class="reference external" href="https://developer.nvidia.com/ffmpeg">CUDA Scale Filter</a> however, it's not shipped by default with ffmpeg not even in deb-multimedia repository because it relies on <cite>libnppc10 &lt;https://packages.debian.org/bullseye/libnppc10&gt;</cite> which is in non-free, and having a dependency on a non-free repository is against the packaging policy of deb-multimedia. So this has to be compiled manually.</p>
-</div>
-<div class="section" id="manually-compile-ffmpeg-to-add-scale-npp-support">
-<h2>Manually compile FFMPEG to add scale_npp support</h2>
-<p>Install libnppc10 package that provides scale_npp filter.</p>
-<div class="highlight"><pre><span></span># apt install libnppc10
+<p>tags: <a href="https://avolkov.github.io/tag/kdenlive.html">kdenlive</a> <a href="https://avolkov.github.io/tag/video-editing.html">video editing</a> <a href="https://avolkov.github.io/tag/nvidia.html">nvidia</a> </p>
+</footer><!-- /.post-info --><p>After numerous tryings in to follow codec settings for youtube <a class="footnote-reference" href="#id4" id="id1">[1]</a> in order to processing time after the video was uploaded, I've come up with the following Kdenlive settings for 1080p video using Nvidia hardware.</p>
+<div class="highlight"><pre><span></span>f=mp4 vcodec=nvenc_h264 acodec=aac ab=384k g=15 profile:v=high global_quality=21 -coder 1 vq=21 -r 29.97 preset=slow bf=2 movflags=faststart pix_fmt=yuv420p
 </pre></div>
-<p>Install all build dependencies of ffmpeg</p>
-<div class="highlight"><pre><span></span># apt-get build-dep ffmpeg
-</pre></div>
-<p>Find a folder on your computer where the build take place, the whole thing takes about 2.8GB of space. Download source code with the following command.</p>
-<div class="highlight"><pre><span></span>$ apt-get source ffmpeg
-</pre></div>
-<p>Once ffmpeg source has been downloaded, add the following configuration parameters in <strong>debian/rules</strong> under CONFIG_ALL variable</p>
-<div class="highlight"><pre><span></span>CONFIG_ALL = \
---enable-libnpp \
---enable-cuda \
-</pre></div>
-<p>Compile the package. This is going to take a while.</p>
-<div class="highlight"><pre><span></span>$ dpkg-buildpackage
-</pre></div>
-<p>Now if you go one directory level up, you should see the following packages created at the end of compilation process.</p>
-<div class="highlight"><pre><span></span>$ ls | grep .deb$
-ffmpeg_4.2.1-dmo3_amd64.deb
-ffmpeg-dbgsym_4.2.1-dmo3_amd64.deb
-ffmpeg-doc_4.2.1-dmo3_all.deb
-libavcodec58_4.2.1-dmo3_amd64.deb
-libavcodec58-dbgsym_4.2.1-dmo3_amd64.deb
-libavcodec-dev_4.2.1-dmo3_amd64.deb
-libavdevice58_4.2.1-dmo3_amd64.deb
-libavdevice58-dbgsym_4.2.1-dmo3_amd64.deb
-libavdevice-dev_4.2.1-dmo3_amd64.deb
-libavfilter7_4.2.1-dmo3_amd64.deb
-libavfilter7-dbgsym_4.2.1-dmo3_amd64.deb
-libavfilter-dev_4.2.1-dmo3_amd64.deb
-libavformat58_4.2.1-dmo3_amd64.deb
-libavformat58-dbgsym_4.2.1-dmo3_amd64.deb
-libavformat-dev_4.2.1-dmo3_amd64.deb
-libavresample4_4.2.1-dmo3_amd64.deb
-libavresample4-dbgsym_4.2.1-dmo3_amd64.deb
-libavresample-dev_4.2.1-dmo3_amd64.deb
-libavutil56_4.2.1-dmo3_amd64.deb
-libavutil56-dbgsym_4.2.1-dmo3_amd64.deb
-libavutil-dev_4.2.1-dmo3_amd64.deb
-libpostproc55_4.2.1-dmo3_amd64.deb
-libpostproc55-dbgsym_4.2.1-dmo3_amd64.deb
-libpostproc-dev_4.2.1-dmo3_amd64.deb
-libswresample3_4.2.1-dmo3_amd64.deb
-libswresample3-dbgsym_4.2.1-dmo3_amd64.deb
-libswresample-dev_4.2.1-dmo3_amd64.deb
-libswscale5_4.2.1-dmo3_amd64.deb
-libswscale5-dbgsym_4.2.1-dmo3_amd64.deb
-libswscale-dev_4.2.1-dmo3_amd64.deb
-</pre></div>
-<p>Install the packages using the following command</p>
-<div class="highlight"><pre><span></span># dpkg -i *.deb
-</pre></div>
-<p>Verify that scale_npp filter is available with the following command</p>
-<div class="highlight"><pre><span></span>$ ffmpeg -hide_banner -filters | grep scale_npp
-... scale_npp         V-&gt;V       NVIDIA Performance Primitives video scaling and format conversion
-</pre></div>
-</div>
-<div class="section" id="make-kdenlive-to-use-scale-npp-proxies">
-<h2>Make kdenlive to use scale_npp proxies</h2>
-<p>Once scale_npp filter is available, let kdenlive use it. I tested this on Kdenlive 19.08.1.</p>
-<p>Go to <strong>Settings -&gt; Configure Kdenlive -&gt; Proxy Clips</strong></p>
-<p>Click settings next to an encoding profile and then add a new profile.</p>
-<img alt="Add new proxy encoding profile" class="align-center" src="images/2019-10-14/001-add-proxy-clip.png" />
-<p>I use the following proxy, specifically for the video output of my Panasonic GH4 in MOV mode. I find if I try to use other codec than aac, I'd get 'Not supported errors'</p>
-<p><strong>Profile Name:</strong> x264-nvenc-gh4-aac-h264_cuvid</p>
-<p><strong>Parameters:</strong> -hwaccel cuvid -c:v h264_cuvid -i -vf scale_npp=720:-2 -vcodec h264_nvenc -g 1 -bf 0 -vb 0 -preset fast -acodec aac</p>
-<p><strong>File Exension:</strong> mov</p>
-<img alt="dialog of profile parameters with the settings above" class="align-center" src="images/2019-10-14/002-profile-parameters.png" />
-<p>Then back in 'Configure Kdenlive' window, go to 'Environment' section and in 'Proxy Clips' set concurrent threads to '1'. My video card supports only two streams and by default two proxy clips are processed at once, if I have more streams than that, nvcodec will raise out of memory error.</p>
-<img alt="setting 1 concurrent proxy clip encoding thread" class="align-center" src="images/2019-10-14/003-proxy-clip-environment.png" />
-</div>
-<div class="section" id="testing">
-<h2>Testing</h2>
-<p>When selecting proxy clip in the clip preview. During clip encoding Video Engine Utilization in nvidia-settings should be between 60%-100%</p>
-<img alt="Typical gpu utilization when encoding proxies" class="align-center" src="images/2019-10-14/004-gpu-utilization.png" />
+<p>The thing these settings don't have is bitrate limit, however in the videos I've encoded, I didn't notice exceeding bitrate it always seem to be under 15Mbps.</p>
+<p>Here's my rationale for each of these encoding options.</p>
+<ul class="simple">
+<li><strong>f=mp4</strong> use mp4 container</li>
+<li><strong>vcodec=nvenc_h264</strong> utilize nvidia hardware acceleration</li>
+<li><strong>acodec=aac ab=384k</strong> use AAC audio codec with bitrate 384k</li>
+<li><strong>global_quality=21 -coder 1 vq=21 preset=slow</strong> following some of the recommendations from this stackoverflow answer on intricacies of nvidia encoder <a class="footnote-reference" href="#id5" id="id2">[2]</a></li>
+<li><strong>-r 29.97</strong> use 29.97 FPS frame rate. This is the framerate I shoot the video with and this is the framerate I use to publish video. This will avoid recording light flickering effect in North America power grid.</li>
+<li><strong>bf=2</strong> 2 consecutive B-frames (youtube recommendation)</li>
+<li><strong>movflags=faststart</strong> youtube recoomendation (mp4 container), see additional discussion on superuser.com <a class="footnote-reference" href="#id6" id="id3">[3]</a></li>
+<li><strong>pix_fmt=yuv420p</strong> pixel format/color encoding to use (youtube recommendation)</li>
+</ul>
+<div class="section" id="references">
+<h2>References</h2>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><a class="reference external" href="https://support.google.com/youtube/answer/1722171?hl=en">Recommended upload encoding settings</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td><a class="reference external" href="https://superuser.com/a/1296511/420376">Best settings for FFMpeg with NVENC</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[3]</td><td><a class="reference external" href="https://superuser.com/questions/856025/any-downsides-to-always-using-the-movflags-faststart-parameter">Any downsides to always using the -movflags faststart parameter?</a></td></tr>
+</tbody>
+</table>
 </div>
                 </article>
             </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="https://avolkov.github.io/speeding-up-generation-of-kdenlive-proxies-with-nvenc.html" rel="bookmark"
+                           title="Permalink to Speeding up generation of Kdenlive proxies with nvenc">Speeding up generation of Kdenlive proxies with nvenc</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2019-10-14T00:00:00-04:00">
+                Published: Mon 14 October 2019
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://avolkov.github.io/author/alex-volkov.html">Alex Volkov</a>
+        </address>
+<p>In <a href="https://avolkov.github.io/category/video-editing.html">video editing</a>.</p>
+<p>tags: <a href="https://avolkov.github.io/tag/kdenlive.html">kdenlive</a> <a href="https://avolkov.github.io/tag/video-editing.html">video editing</a> <a href="https://avolkov.github.io/tag/nvidia.html">nvidia</a> </p>
+</footer><!-- /.post-info -->                <p class="first last">speedup proxies using nvenc</p>
+
+                <a class="readmore" href="https://avolkov.github.io/speeding-up-generation-of-kdenlive-proxies-with-nvenc.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+                </section><!-- /#content -->
         <section id="extras" class="body">
                 <div class="social">
                         <h2>social</h2>
